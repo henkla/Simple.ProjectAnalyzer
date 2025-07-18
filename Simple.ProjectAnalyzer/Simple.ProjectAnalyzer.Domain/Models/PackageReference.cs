@@ -1,6 +1,6 @@
 namespace Simple.ProjectAnalyzer.Domain.Models;
 
-public class PackageReference
+public class PackageReference : IAnalyzable
 {
     public required string Name { get; init; }
     public required string Version { get; init; }

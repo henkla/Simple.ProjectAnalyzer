@@ -2,12 +2,12 @@ using Simple.ProjectAnalyzer.Domain.CommandLine.Commands;
 using Simple.ProjectAnalyzer.Domain.Models;
 using Simple.ProjectAnalyzer.Domain.Utilities;
 
-namespace Simple.ProjectAnalyzer.Domain.Analyzers;
+namespace Simple.ProjectAnalyzer.Domain.Analysis;
 
-public class AnalysisContext
+public class Context
 {
     public required CurrentLtsVersion CurrentLtsVersion { get; init; }
     public List<Project> Projects { get; set; } = [];
-    public required AnalyzeSettings Settings { get; set; }
+    public required AnalyzeCommandSettings CommandSettings { get; set; }
     public ExitCode ExitCode { get; set; } = ExitCode.Ok;
 }

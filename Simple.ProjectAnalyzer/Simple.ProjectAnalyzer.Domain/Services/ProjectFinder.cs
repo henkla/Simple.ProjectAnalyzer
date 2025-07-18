@@ -7,22 +7,22 @@ namespace Simple.ProjectAnalyzer.Domain.Services;
 
 public class ProjectFinder
 {
-    public List<string> FindProjectFiles(AnalyzeSettings settings)
+    public List<string> FindProjectFiles(AnalyzeCommandSettings commandSettings)
     {
-        if (settings.Verbose)
+        if (commandSettings.Verbose)
         {
             Writer.WriteVerbose("Looking for project files...");
-            Writer.WriteVerbose($"Path: {settings.Path}");
+            Writer.WriteVerbose($"Path: {commandSettings.Path}");
         }
 
         // 1) Kolla om det finns csproj-filer i just startPath (icke rekursivt), exkludera bin/obj
-        var csprojFiles = Directory.EnumerateFiles(settings.Path!, "*.csproj", SearchOption.TopDirectoryOnly)
+        var csprojFiles = Directory.EnumerateFiles(commandSettings.Path!, "*.csproj", SearchOption.TopDirectoryOnly)
             .Where(path => !IsInIgnoredDir(path))
             .ToList();
 
         if (csprojFiles.Count != 0)
         {
-            if (settings.Verbose)
+            if (commandSettings.Verbose)
             {
                 Writer.WriteVerbose($"Found {csprojFiles.Count} project(s)");
             }
@@ -31,10 +31,10 @@ public class ProjectFinder
         }
 
         // 2) Leta rekursivt neråt i alla barn-mappar, exkludera bin/obj
-        csprojFiles = GetAllCsprojFilesRecursive(settings.Path!);
+        csprojFiles = GetAllCsprojFilesRecursive(commandSettings.Path!);
         if (csprojFiles.Count != 0)
         {
-            if (settings.Verbose)
+            if (commandSettings.Verbose)
             {
                 Writer.WriteVerbose($"Found {csprojFiles.Count} project(s)");
             }
@@ -43,7 +43,7 @@ public class ProjectFinder
         }
 
         // 3) Leta uppåt tills vi hittar en csproj-fil, returnera alla csproj i den mappen
-        var dir = new DirectoryInfo(settings.Path!);
+        var dir = new DirectoryInfo(commandSettings.Path!);
         while (dir != null)
         {
             csprojFiles = Directory.EnumerateFiles(dir.FullName, "*.csproj", SearchOption.TopDirectoryOnly)
@@ -52,7 +52,7 @@ public class ProjectFinder
 
             if (csprojFiles.Count != 0)
             {
-                if (settings.Verbose)
+                if (commandSettings.Verbose)
                 {
                     Writer.WriteVerbose($"Found {csprojFiles.Count} project(s)");
                 }
@@ -64,7 +64,7 @@ public class ProjectFinder
         }
 
         // 4) Leta uppåt tills vi hittar en sln-fil, plocka ut csproj-filer som finns i den
-        dir = new DirectoryInfo(settings.Path!);
+        dir = new DirectoryInfo(commandSettings.Path!);
         while (dir != null)
         {
             var slnFiles = Directory.EnumerateFiles(dir.FullName, "*.sln", SearchOption.TopDirectoryOnly).ToList();
@@ -82,7 +82,7 @@ public class ProjectFinder
 
                 if (csprojPaths.Count != 0)
                 {
-                    if (settings.Verbose)
+                    if (commandSettings.Verbose)
                     {
                         Writer.WriteVerbose($"Found {csprojPaths.Count} project(s)");
                     }
@@ -94,7 +94,7 @@ public class ProjectFinder
             dir = dir.Parent;
         }
 
-        if (settings.Verbose)
+        if (commandSettings.Verbose)
         {
             Writer.WriteVerbose("No project(s) found");
         }

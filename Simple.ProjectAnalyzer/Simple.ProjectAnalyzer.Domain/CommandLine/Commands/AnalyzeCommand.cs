@@ -1,4 +1,4 @@
-using Simple.ProjectAnalyzer.Domain.Analyzers;
+using Simple.ProjectAnalyzer.Domain.Analysis;
 using Simple.ProjectAnalyzer.Domain.Models;
 using Simple.ProjectAnalyzer.Domain.Services;
 using Spectre.Console;
@@ -8,26 +8,26 @@ namespace Simple.ProjectAnalyzer.Domain.CommandLine.Commands;
 
 public class AnalyzeCommand(
     ProjectParser projectParser,
-    AnalyzeHandler handler,
-    ProjectFinder projectFinder) : AsyncCommand<AnalyzeSettings>
+    Orchestrator orchestrator,
+    ProjectFinder projectFinder) : AsyncCommand<AnalyzeCommandSettings>
 {
-    public override async Task<int> ExecuteAsync(CommandContext context, AnalyzeSettings settings)
+    public override async Task<int> ExecuteAsync(CommandContext context, AnalyzeCommandSettings commandSettings)
     {
-        if (!settings.AreValid(out var validationMessage))
+        if (!commandSettings.AreValid(out var validationMessage))
         {
             throw new ProjectAnalyzerException("Invalid project settings: " + validationMessage);
         }
 
-        var projectFiles = projectFinder.FindProjectFiles(settings);
+        var projectFiles = projectFinder.FindProjectFiles(commandSettings);
         var projects = projectParser.ParseMany(projectFiles);
-        var analysisContext = await handler.AnalyzeProjects(projects, settings);
+        var analysisContext = await orchestrator.AnalyzeProjects(projects, commandSettings);
 
-        await WriteResults(analysisContext, settings);
+        await WriteResults(analysisContext, commandSettings);
 
         return (int)analysisContext.ExitCode;
     }
 
-    private async Task WriteResults(AnalysisContext context, AnalyzeSettings settings)
+    private async Task WriteResults(Context context, AnalyzeCommandSettings commandSettings)
     {
         foreach (var project in context.Projects.OrderBy(p => p.Name))
         {
@@ -80,6 +80,26 @@ public class AnalyzeCommand(
                 AnsiConsole.MarkupLine("[green]  Project looks good![/]");
 
             AnsiConsole.WriteLine();
+        }
+        
+        AnsiConsole.WriteLine("Summary of analysis:");
+
+        var projectResultGroupedByAnalysis = context.Projects
+            .SelectMany(p => p.AnalysisResults)
+            .Where(r => r.Code is not ResultCode.Ok)
+            .GroupBy(r => r.Source);
+
+        foreach (var analysisGroup in projectResultGroupedByAnalysis)
+        {
+            AnsiConsole.WriteLine();
+            AnsiConsole.WriteLine($"{analysisGroup.Key}");
+                
+            AnsiConsole.WriteLine($"{analysisGroup.First().Details}");
+                
+            foreach (var result in analysisGroup.OrderBy(r => r.Source))
+            {
+                AnsiConsole.WriteLine($"- {result.Parent.Name}");
+            }
         }
     }
 

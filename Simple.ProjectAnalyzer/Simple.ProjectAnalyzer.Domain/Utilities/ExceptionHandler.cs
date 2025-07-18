@@ -22,12 +22,12 @@ public static class ExceptionHandler
         return GetExitCode(exception);
     }
 
-    private static AnalyzeSettings? ResolveAnalyzeSettings(ITypeResolver? resolver)
+    private static AnalyzeCommandSettings? ResolveAnalyzeSettings(ITypeResolver? resolver)
     {
         try
         {
-            var settings = resolver?.Resolve(typeof(AnalyzeSettings));
-            return settings as AnalyzeSettings;
+            var settings = resolver?.Resolve(typeof(AnalyzeCommandSettings));
+            return settings as AnalyzeCommandSettings;
         }
         catch (Exception exception)
         {

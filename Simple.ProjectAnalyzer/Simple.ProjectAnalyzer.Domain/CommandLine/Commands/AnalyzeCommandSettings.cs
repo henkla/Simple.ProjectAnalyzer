@@ -3,7 +3,7 @@ using Spectre.Console.Cli;
 
 namespace Simple.ProjectAnalyzer.Domain.CommandLine.Commands;
 
-public class AnalyzeSettings : CommandSettings
+public class AnalyzeCommandSettings : CommandSettings
 {
     [CommandOption("-p|--path <PATH>")]
     [Description("Path to the folder or .sln file to analyze.")]
