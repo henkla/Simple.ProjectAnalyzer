@@ -8,4 +8,5 @@
 * Remove analyzers that are no longer needed
 * Make CurrentLtsVersionService actually fetch latest lts from internet
 * PackadeReference class should have field Version be of type Version instead of string
-* 
+* Create a new class responsible for printing result to cli
+* Add --output|-o options to both commands (local and repo) so that output can be written to file (should be jsonc format) 
