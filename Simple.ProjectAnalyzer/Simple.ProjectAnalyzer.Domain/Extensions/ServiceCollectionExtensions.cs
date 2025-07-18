@@ -19,6 +19,7 @@ public static class ServiceCollectionExtensions
         // services.AddSingleton<TargetFrameworkAnalyzer>();
         services.AddSingleton<ProjectTypeAnalyzer>();
         services.AddSingleton<ProjectParser>();
+        services.AddSingleton<PreReleasePackageReferenceAnalyzer>();
 
         return services;
     }

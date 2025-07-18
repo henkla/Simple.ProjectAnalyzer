@@ -7,6 +7,7 @@ namespace Simple.ProjectAnalyzer.Domain.Analyzers;
 public class AnalyzeHandler(
     ProjectTypeAnalyzer projectTypeAnalyzer,
     // TargetFrameworkAnalyzer targetFrameworkAnalyzer,
+    PreReleasePackageReferenceAnalyzer  preReleasePackageReferenceAnalyzer,
     CurrentLtsService currentLtsService,
     OldFrameworkAnalyzer oldFrameworkAnalyzer,
     ExternalDllAnalyzer  externalDllAnalyzer,
@@ -31,6 +32,7 @@ public class AnalyzeHandler(
         {
             oldFrameworkAnalyzer.Run(ref context),
             externalDllAnalyzer.Run(ref context),
+            preReleasePackageReferenceAnalyzer.Run(ref context),
             outdatedDependenciesAnalyzer.Run(ref context),
             unusedDependenciesAnalyzer.Run(ref context)
         };
