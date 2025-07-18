@@ -1,0 +1,22 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Simple.ProjectAnalyzer", "Simple.ProjectAnalyzer\Simple.ProjectAnalyzer.csproj", "{84192884-9902-4D3B-B92F-1C5DD646D6E3}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Simple.ProjectAnalyzer.Domain", "Simple.ProjectAnalyzer.Domain\Simple.ProjectAnalyzer.Domain.csproj", "{D3B7C27C-8C61-4C24-96BF-1BFBE40D6B05}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{84192884-9902-4D3B-B92F-1C5DD646D6E3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{84192884-9902-4D3B-B92F-1C5DD646D6E3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{84192884-9902-4D3B-B92F-1C5DD646D6E3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{84192884-9902-4D3B-B92F-1C5DD646D6E3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D3B7C27C-8C61-4C24-96BF-1BFBE40D6B05}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D3B7C27C-8C61-4C24-96BF-1BFBE40D6B05}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D3B7C27C-8C61-4C24-96BF-1BFBE40D6B05}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D3B7C27C-8C61-4C24-96BF-1BFBE40D6B05}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
