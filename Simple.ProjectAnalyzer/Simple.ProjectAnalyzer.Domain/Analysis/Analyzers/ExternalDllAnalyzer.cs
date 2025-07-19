@@ -1,4 +1,3 @@
-using System.Xml.Linq;
 using Simple.ProjectAnalyzer.Domain.Models;
 
 namespace Simple.ProjectAnalyzer.Domain.Analysis.Analyzers;
@@ -10,7 +9,6 @@ public class ExternalDllAnalyzer : AnalyzerBase
         
         foreach (var project in context.Projects)
         {
-            // var hasDllReferences = HasDllReferences(project.Path);
             var hasDllReferences = project.References.Count > 0;
 
             if (hasDllReferences)
@@ -59,18 +57,7 @@ public class ExternalDllAnalyzer : AnalyzerBase
                 });
             }
         }
-
         
         return Task.CompletedTask;
-        
-    }
-    
-    private static bool HasDllReferences(string csprojPath)
-    {
-        var doc = XDocument.Load(csprojPath);
-        var ns = doc.Root?.Name.Namespace ?? XNamespace.None;
-
-        return doc.Descendants(ns + "Reference")
-            .Any(r => r.Element(ns + "HintPath")?.Value.EndsWith(".dll", StringComparison.OrdinalIgnoreCase) == true);
     }
 }
