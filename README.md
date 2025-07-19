@@ -1,5 +1,7 @@
 # Simple.ProjectAnalyzer
 
+## State of Now
+<img width="2098" height="626" alt="image" src="https://github.com/user-attachments/assets/6f495c2e-ddc5-4e96-a8a8-ea9606ed1669" />
 
 
 ## Todo 
