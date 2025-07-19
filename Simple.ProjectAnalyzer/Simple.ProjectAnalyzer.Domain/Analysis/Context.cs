@@ -6,7 +6,7 @@ namespace Simple.ProjectAnalyzer.Domain.Analysis;
 
 public class Context
 {
-    public required CurrentLtsVersion CurrentLtsVersion { get; init; }
+    public required TargetFramework CurrentLtsVersion { get; init; }
     public List<Project> Projects { get; set; } = [];
     public required AnalyzeCommandSettings CommandSettings { get; set; }
     public ExitCode ExitCode { get; set; } = ExitCode.Ok;

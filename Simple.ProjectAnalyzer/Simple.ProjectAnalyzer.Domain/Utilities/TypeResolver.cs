@@ -1,8 +1,7 @@
-
 using Microsoft.Extensions.DependencyInjection;
 using Spectre.Console.Cli;
 
-namespace Simple.ProjectAnalyzer.Domain.CommandLine.Commands;
+namespace Simple.ProjectAnalyzer.Domain.Utilities;
 
 public sealed class TypeResolver(ServiceProvider provider) : ITypeResolver, IDisposable
 {

@@ -1,9 +1,9 @@
 namespace Simple.ProjectAnalyzer.Domain.Models;
 
-public enum ResultCode
+public enum AnalysisResultCode
 {
     Ok = 0,
-    Suggestion,
+    Hint,
     Warning,
     Error
 }

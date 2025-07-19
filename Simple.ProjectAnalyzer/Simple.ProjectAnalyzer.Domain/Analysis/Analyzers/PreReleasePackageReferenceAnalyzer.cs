@@ -11,53 +11,76 @@ public class PreReleasePackageReferenceAnalyzer : AnalyzerBase
     {
         foreach (var project in context.Projects)
         {
-            foreach (var package in project.PackageReferences.Where(package => IsPreRelease(package.Version)))
+            if (project.PackageReferences.Count == 0)
             {
-                var packageMessage = $"Package '{package.Name}' uses pre-release version '{package.Version}'.";
-                var packageDetails = $"Consider using a stable release instead of the pre-release version '{package.Version}' " +
-                                     $"of package '{package.Name}' to ensure better reliability, compatibility, and long-term support. " +
-                                     $"Pre-release packages may contain experimental features, are more likely to change, and can cause " +
-                                     $"instabilities when used in production environments.";
-
-                package.AnalysisResults.Add(new AnalysisResult
+                project.AnalysisResults.Add(new AnalysisResult
                 {
-                    Message = packageMessage,
-                    Details = packageDetails,
-                    Code = ResultCode.Suggestion,
-                    Parent = package,
+                    Title = "No package references found",
+                    Message = "The project does not reference any NuGet packages.",
+                    Details = "This project currently has no package dependencies declared. While " +
+                              "this can simplify dependency management, it may limit access to external " +
+                              "libraries, updates, and bug fixes. If your project does not require external " +
+                              "packages, this is perfectly fine. Otherwise, consider adding necessary " +
+                              "package references to leverage shared functionality, security updates, " +
+                              "and ongoing improvements from third-party libraries.",
+                    Code = AnalysisResultCode.Ok,
+                    Parent = project,
                     Source = nameof(PreReleasePackageReferenceAnalyzer)
                 });
 
-                var projectMessage = $"Project '{project.Name}' includes a pre-release package: '{package.Name}' version '{package.Version}'.";
-                var projectDetails = $"Pre-release packages are intended for testing and early feedback. They may include unfinished " +
-                                     $"features, breaking changes, or bugs. Avoid depending on them in production unless you fully understand " +
-                                     $"the risks and accept the maintenance overhead.";
-
+                continue;
+            }
+            
+            var preReleasePackages = project.PackageReferences
+                .Where(package => IsPreRelease(package.Version))
+                .ToList();
+            
+            if (preReleasePackages.Count != 0)
+            {
                 project.AnalysisResults.Add(new AnalysisResult
                 {
-                    Message = projectMessage,
-                    Details = projectDetails,
-                    Code = ResultCode.Suggestion,
+                    Title = "Pre-release packages",
+                    Message = "Project includes one or more pre-release packages.",
+                    Details = $"Pre-release packages are intended for testing and early feedback. They may include unfinished " +
+                              $"features, breaking changes, or bugs. Avoid depending on them in production unless you fully understand " +
+                              $"the risks and accept the maintenance overhead.",
+                    Recommendation = "Use stable versions if possible.",
+                    Code = AnalysisResultCode.Hint,
+                    Parent = project,
+                    Source = nameof(PreReleasePackageReferenceAnalyzer)
+                });
+            }
+            else
+            {
+                project.AnalysisResults.Add(new AnalysisResult
+                {
+                    Title = "Stable packages",
+                    Message = "Stable package version is in use, which provides a reliable and tested foundation for your application.",
+                    Details = "Stable package releases have undergone thorough testing and quality assurance. " +
+                              "They offer greater reliability and backward compatibility, reducing the risk of unexpected issues. " +
+                              "Using stable versions in production environments helps ensure security, performance, and maintainability. " +
+                              "Keep dependencies updated to benefit from the latest fixes and improvements.",
+                    Code = AnalysisResultCode.Ok,
                     Parent = project,
                     Source = nameof(PreReleasePackageReferenceAnalyzer)
                 });
             }
 
-            var projectOkMessage = "Stable package version is in use, which provides a reliable and tested foundation for your application.";
-            var projectOkDetails = "Stable package releases have undergone thorough testing and quality assurance. " +
-                                   "They offer greater reliability and backward compatibility, reducing the risk of unexpected issues. " +
-                                   "Using stable versions in production environments helps ensure security, performance, and maintainability. " +
-                                   "Keep dependencies updated to benefit from the latest fixes and improvements.";
-
-            project.AnalysisResults.Add(new AnalysisResult
+            foreach (var preReleasePackage in preReleasePackages)
             {
-                Message = projectOkMessage,
-                Details = projectOkDetails,
-                Code = ResultCode.Ok,
-                Parent = project,
-                Source = nameof(PreReleasePackageReferenceAnalyzer)
-            });
-
+                preReleasePackage.AnalysisResults.Add(new AnalysisResult
+                {
+                    Title = "Pre-release package",
+                    Message = "This package is using a pre-release version.",
+                    Details = "This package is a pre-release, which may include experimental features, unexpected " +
+                              "changes, and potential instability in production environments. It is recommended " +
+                              "to switch to a stable release for improved reliability, compatibility, and long-term " +
+                              "support.",
+                    Code = AnalysisResultCode.Hint,
+                    Parent = preReleasePackage,
+                    Source = nameof(PreReleasePackageReferenceAnalyzer)
+                });
+            }
         }
 
         return Task.CompletedTask;

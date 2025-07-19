@@ -21,6 +21,7 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<ProjectFinder>();
         services.AddSingleton<CurrentLtsService>();
         services.AddSingleton<ProjectParser>();
+        services.AddSingleton<ResultOutputHandler>();
 
         return services;
     }

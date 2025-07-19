@@ -10,4 +10,5 @@ public class Project : IAnalyzable
     public required string Path { get; init; }
     public List<PackageReference> PackageReferences { get; init; } = [];
     public List<AnalysisResult> AnalysisResults { get; } = [];
+    public required bool IsLegacy { get; set; }
 }

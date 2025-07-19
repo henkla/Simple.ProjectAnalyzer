@@ -26,6 +26,8 @@ public class Orchestrator(
             CurrentLtsVersion = currentLtsVersion
         };
 
+        
+            
         var analysisTasks = new List<Task>()
         {
             legacyProjectAnalyzer.Run(ref context),

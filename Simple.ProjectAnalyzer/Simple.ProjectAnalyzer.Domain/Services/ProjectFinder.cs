@@ -136,13 +136,4 @@ public class ProjectFinder
 
         return projectPaths;
     }
-
-    private List<Project> GetProjectFromProjectFiles(List<string> projectFiles)
-    {
-        return projectFiles.Select(projectFile => new Project
-        {
-            Path = projectFile,
-            Name = Path.GetFileNameWithoutExtension(projectFile),
-        }).ToList();
-    }
 }

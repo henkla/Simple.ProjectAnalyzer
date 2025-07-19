@@ -11,7 +11,7 @@ var registrar = new TypeRegistrar(services);
 var application = new CommandApp(registrar);
 
 application.SetDefaultCommand<AnalyzeCommand>()
-    .WithDescription(Constants.AppCommandDescription);
+    .WithDescription(AnalyzeCommand.Description);
     
 application.Configure(config =>
 {

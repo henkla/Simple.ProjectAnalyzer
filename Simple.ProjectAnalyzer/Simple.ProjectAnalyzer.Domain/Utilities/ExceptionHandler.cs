@@ -1,4 +1,5 @@
 using Simple.ProjectAnalyzer.Domain.CommandLine.Commands;
+using Simple.ProjectAnalyzer.Domain.Models;
 using Spectre.Console;
 using Spectre.Console.Cli;
 

@@ -1,4 +1,4 @@
-namespace Simple.ProjectAnalyzer.Domain.Utilities;
+namespace Simple.ProjectAnalyzer.Domain.Models;
 
 public enum ExitCode
 {
