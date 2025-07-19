@@ -13,7 +13,7 @@ public class Orchestrator(
     ExternalDllAnalyzer  externalDllAnalyzer
 )
 {
-    public async Task<Context> AnalyzeProjects(List<Project> projectsToAnalyze, AnalyzeCommandSettings commandSettings)
+    public async Task<Context> AnalyzeProjects(List<Project> projectsToAnalyze, ICommandable commandSettings)
     {
         // in order to perform analysis on project files, we need to know 
         // which version of dotnet that is current LTS
@@ -25,8 +25,6 @@ public class Orchestrator(
             CommandSettings = commandSettings,
             CurrentLtsVersion = currentLtsVersion
         };
-
-        
             
         var analysisTasks = new List<Task>()
         {

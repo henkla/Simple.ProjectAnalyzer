@@ -6,22 +6,22 @@ namespace Simple.ProjectAnalyzer.Domain.Services;
 
 public class ProjectFinder
 {
-    public List<string> FindProjectFiles(AnalyzeCommandSettings commandSettings)
+    public List<string> FindProjectFiles(string path, bool verbose)
     {
-        if (commandSettings.Verbose)
+        if (verbose)
         {
             Writer.WriteVerbose("Looking for project files...");
-            Writer.WriteVerbose($"Path: {commandSettings.Path}");
+            Writer.WriteVerbose($"Path: {path}");
         }
 
         // 1) Kolla om det finns csproj-filer i just startPath (icke rekursivt), exkludera bin/obj
-        var csprojFiles = Directory.EnumerateFiles(commandSettings.Path!, "*.csproj", SearchOption.TopDirectoryOnly)
-            .Where(path => !IsInIgnoredDir(path))
+        var csprojFiles = Directory.EnumerateFiles(path, "*.csproj", SearchOption.TopDirectoryOnly)
+            .Where(p => !IsInIgnoredDir(p))
             .ToList();
 
         if (csprojFiles.Count != 0)
         {
-            if (commandSettings.Verbose)
+            if (verbose)
             {
                 Writer.WriteVerbose($"Found {csprojFiles.Count} project(s)");
             }
@@ -30,10 +30,10 @@ public class ProjectFinder
         }
 
         // 2) Leta rekursivt neråt i alla barn-mappar, exkludera bin/obj
-        csprojFiles = GetAllCsprojFilesRecursive(commandSettings.Path!);
+        csprojFiles = GetAllCsprojFilesRecursive(path);
         if (csprojFiles.Count != 0)
         {
-            if (commandSettings.Verbose)
+            if (verbose)
             {
                 Writer.WriteVerbose($"Found {csprojFiles.Count} project(s)");
             }
@@ -42,16 +42,16 @@ public class ProjectFinder
         }
 
         // 3) Leta uppåt tills vi hittar en csproj-fil, returnera alla csproj i den mappen
-        var dir = new DirectoryInfo(commandSettings.Path!);
+        var dir = new DirectoryInfo(path);
         while (dir != null)
         {
             csprojFiles = Directory.EnumerateFiles(dir.FullName, "*.csproj", SearchOption.TopDirectoryOnly)
-                .Where(path => !IsInIgnoredDir(path))
+                .Where(p => !IsInIgnoredDir(p))
                 .ToList();
 
             if (csprojFiles.Count != 0)
             {
-                if (commandSettings.Verbose)
+                if (verbose)
                 {
                     Writer.WriteVerbose($"Found {csprojFiles.Count} project(s)");
                 }
@@ -63,7 +63,7 @@ public class ProjectFinder
         }
 
         // 4) Leta uppåt tills vi hittar en sln-fil, plocka ut csproj-filer som finns i den
-        dir = new DirectoryInfo(commandSettings.Path!);
+        dir = new DirectoryInfo(path);
         while (dir != null)
         {
             var slnFiles = Directory.EnumerateFiles(dir.FullName, "*.sln", SearchOption.TopDirectoryOnly).ToList();
@@ -76,12 +76,12 @@ public class ProjectFinder
                 // Konvertera ev. relativa sökvägar i sln till absoluta sökvägar
                 var csprojPaths = projectsInSln
                     .Select(projPath => Path.GetFullPath(Path.Combine(dir.FullName, projPath)))
-                    .Where(path => File.Exists(path) && !IsInIgnoredDir(path))
+                    .Where(p => File.Exists(p) && !IsInIgnoredDir(p))
                     .ToList();
 
                 if (csprojPaths.Count != 0)
                 {
-                    if (commandSettings.Verbose)
+                    if (verbose)
                     {
                         Writer.WriteVerbose($"Found {csprojPaths.Count} project(s)");
                     }
@@ -93,12 +93,17 @@ public class ProjectFinder
             dir = dir.Parent;
         }
 
-        if (commandSettings.Verbose)
+        if (verbose)
         {
             Writer.WriteVerbose("No project(s) found");
         }
 
         return [];
+    }
+    
+    public List<string> FindProjectFiles(ICommandable commandSettings)
+    {
+        return FindProjectFiles(commandSettings.Path, commandSettings.Verbose);
     }
 
     private bool IsInIgnoredDir(string filePath)

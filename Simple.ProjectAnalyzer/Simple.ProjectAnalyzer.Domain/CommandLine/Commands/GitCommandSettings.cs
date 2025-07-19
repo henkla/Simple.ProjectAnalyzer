@@ -3,11 +3,11 @@ using Spectre.Console.Cli;
 
 namespace Simple.ProjectAnalyzer.Domain.CommandLine.Commands;
 
-public class AnalyzeCommandSettings : CommandSettings, ICommandable
+public class GitCommandSettings : CommandSettings, ICommandable
 {
     [CommandOption("-p|--path <PATH>")]
-    [Description("Path to the folder or .sln file to analyze.")]
-    public string? Path { get; set; }
+    [Description("Path to the git repository")]
+    public string Path { get; set; }
 
     [CommandOption("-v|--verbose")]
     [Description("Enable verbose output.")]
@@ -15,9 +15,10 @@ public class AnalyzeCommandSettings : CommandSettings, ICommandable
 
     public bool IsValid(out string message)
     {
-        if (Path is null || !Directory.Exists(Path))
+        if (string.IsNullOrWhiteSpace(Path))
         {
-            Path ??= Directory.GetCurrentDirectory();
+            message = "Git repository path not specified";
+            return false;
         }
         
         message = string.Empty;

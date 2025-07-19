@@ -22,6 +22,7 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<CurrentLtsService>();
         services.AddSingleton<ProjectParser>();
         services.AddSingleton<ResultOutputHandler>();
+        services.AddSingleton<GitCloneService>();
 
         return services;
     }

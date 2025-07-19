@@ -6,7 +6,6 @@ public class ExternalDllAnalyzer : AnalyzerBase
 {
     public override Task Run(ref Context context)
     {
-        
         foreach (var project in context.Projects)
         {
             var hasDllReferences = project.References.Count > 0;

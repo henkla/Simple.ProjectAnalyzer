@@ -1,7 +1,5 @@
 using Simple.ProjectAnalyzer.Domain.Analysis;
-using Simple.ProjectAnalyzer.Domain.Models;
 using Simple.ProjectAnalyzer.Domain.Services;
-using Spectre.Console;
 using Spectre.Console.Cli;
 
 namespace Simple.ProjectAnalyzer.Domain.CommandLine.Commands;
@@ -13,15 +11,16 @@ public class AnalyzeCommand(
     ResultOutputHandler resultOutputHandler
     ) : AsyncCommand<AnalyzeCommandSettings>
 {
+    public const string CommandName = "local";
     public const string Description = "Performs a static analysis of one or more .NET projects and " +
                                       "outputs diagnostics related to framework versions, package " +
                                       "references, DLL dependencies, and upgrade suggestions.";
     
     public override async Task<int> ExecuteAsync(CommandContext commandContext, AnalyzeCommandSettings commandSettings)
     {
-        if (!commandSettings.AreValid(out var validationMessage))
+        if (!commandSettings.IsValid(out var validationMessage))
         {
-            throw new ProjectAnalyzerException("Invalid project settings: " + validationMessage);
+            throw new ProjectAnalyzerException("Invalid command settings: " + validationMessage);
         }
 
         var projectFiles = projectFinder.FindProjectFiles(commandSettings);

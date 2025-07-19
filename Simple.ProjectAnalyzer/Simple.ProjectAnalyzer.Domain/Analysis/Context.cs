@@ -8,6 +8,6 @@ public class Context
 {
     public required TargetFramework CurrentLtsVersion { get; init; }
     public List<Project> Projects { get; set; } = [];
-    public required AnalyzeCommandSettings CommandSettings { get; set; }
+    public required ICommandable CommandSettings { get; set; }
     public ExitCode ExitCode { get; set; } = ExitCode.Ok;
 }

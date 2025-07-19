@@ -15,6 +15,9 @@ application.SetDefaultCommand<AnalyzeCommand>()
     
 application.Configure(config =>
 {
+    config.AddCommand<GitCommand>(GitCommand.CommandName)
+        .WithDescription(GitCommand.CommandDescription);
+    
     config.SetApplicationName(Constants.AppName);
     config.SetExceptionHandler(ExceptionHandler.OnException);
 });
