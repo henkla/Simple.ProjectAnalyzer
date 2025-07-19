@@ -1,7 +1,6 @@
 using System.Text.RegularExpressions;
 using Simple.ProjectAnalyzer.Domain.CommandLine;
 using Simple.ProjectAnalyzer.Domain.CommandLine.Commands;
-using Simple.ProjectAnalyzer.Domain.Models;
 
 namespace Simple.ProjectAnalyzer.Domain.Services;
 

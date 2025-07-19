@@ -1,7 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
 using System.Text.RegularExpressions;
 using System.Xml.Linq;
 using Simple.ProjectAnalyzer.Domain.Models;
@@ -13,7 +9,9 @@ namespace Simple.ProjectAnalyzer.Domain.Services
         public Project Parse(string projectFile)
         {
             if (!File.Exists(projectFile))
+            {
                 throw new FileNotFoundException("Project file not found", projectFile);
+            }
 
             var xdoc = XDocument.Load(projectFile);
             var ns = xdoc.Root?.Name.Namespace ?? XNamespace.None;

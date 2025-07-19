@@ -6,7 +6,7 @@ public class CurrentLtsService
 {
     public async Task<TargetFramework> GetCurrentLtsVersion()
     {
-        // todo: fallback från Simple.ProjectAnalyzer.Domain.Constants.CurrentLtsVersionFallback
+        // todo: handle fallback somehow if fetching of real LTS doesn't work 
         return new TargetFramework
         {
             Alias = "net8.0",

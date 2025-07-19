@@ -1,4 +1,3 @@
-using Simple.CaseConverter.Extensions;
 using Simple.ProjectAnalyzer.Domain.Analysis;
 using Simple.ProjectAnalyzer.Domain.Models;
 using Spectre.Console;
@@ -128,7 +127,7 @@ public class ResultOutputHandler
         }
     }
 
-    private string GetColorForResultCode(AnalysisResultCode code) => code switch
+    private static string GetColorForResultCode(AnalysisResultCode code) => code switch
     {
         AnalysisResultCode.Error => "red",
         AnalysisResultCode.Warning => "yellow",
