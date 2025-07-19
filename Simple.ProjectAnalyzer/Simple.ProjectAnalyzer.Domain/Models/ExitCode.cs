@@ -4,15 +4,15 @@ public enum ExitCode
 {
     Ok = 0,
     
-    // warnings: 100-199
+    // hints: 100-199
+    Hint = 100,
     
-    Warning = 100,
+    // warnings: 200-299
+    Warning = 200,
     
-    // errors: 200-299
+    // errors: 300-399
+    Error = 300,
     
-    Error = 200,
-    
-    // exceptions: 300-399
-    
-    Exception = 300
+    // exceptions: 400-499
+    Exception = 400
 }
