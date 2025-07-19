@@ -4,6 +4,6 @@ public class TargetFramework
 {
     public required string Alias { get; init; }
     public Version Version { get; init; }
-    public bool IsLts => (Version.Major % 2 == 0);
+    public bool IsLts => Version.Major > 5 && Version.Major % 2 == 0;
     public required string Type { get; set; }
 }
