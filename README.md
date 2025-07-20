@@ -1,7 +1,14 @@
 # Simple.ProjectAnalyzer
 
 ## State of Now
-<img width="2098" height="626" alt="image" src="state-of-now.png" />
+
+### Analysis
+
+<img alt="image" src="state-of-now-1.png" />
+
+### Available analyzers
+
+<img alt="image" src="state-of-now-2.png" />
 
 
 ## Todo 
