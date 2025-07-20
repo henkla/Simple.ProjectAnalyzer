@@ -1,11 +1,14 @@
+using Simple.ProjectAnalyzer.Domain.CommandLine;
 using Simple.ProjectAnalyzer.Domain.Models;
 
 namespace Simple.ProjectAnalyzer.Domain.Analysis.Analyzers;
 
-public class OutdatedFrameworkAnalyzer : AnalyzerBase
+public class OutdatedFrameworkAnalyzer : IAnalyzer
 {
-    public override Task Run(ref Context context)
+    public Task Run(Context context)
     {
+        Output.Verbose($"{nameof(OutdatedFrameworkAnalyzer)}.{nameof(Run)} started");
+        
         var sdkProjects = context.Projects
             .Where(p => p.TargetFrameworks.Any(tf => tf.Version.Major >= 5))
             .ToList();
@@ -22,14 +25,13 @@ public class OutdatedFrameworkAnalyzer : AnalyzerBase
     private static AnalysisResult CompareProjectVersionToCurrentLts(Project sdkProject, TargetFramework currentLtsVersion)
     {
         var currentLtsVersionAlias = currentLtsVersion.Alias;
-        const string source = nameof(OutdatedFrameworkAnalyzer);
         var highestTargetFramework = GetHighestTargetFramework(sdkProject.TargetFrameworks);
 
         return highestTargetFramework.Version.CompareTo(currentLtsVersion.Version) switch
         {
             > 0 => new AnalysisResult // ahead of LTS
             {
-                Source = source,
+                Source = nameof(OutdatedFrameworkAnalyzer),
                 Code = AnalysisResultCode.Ok,
                 Parent = sdkProject,
                 Title = "TargetFramework is ahead of LTS",
@@ -41,7 +43,7 @@ public class OutdatedFrameworkAnalyzer : AnalyzerBase
             },
             < 0 => new AnalysisResult // behind LTS
             {
-                Source = source,
+                Source = nameof(OutdatedFrameworkAnalyzer),
                 Code = AnalysisResultCode.Warning,
                 Parent = sdkProject,
                 Title = "Target Framework is behind LTS",
@@ -54,7 +56,7 @@ public class OutdatedFrameworkAnalyzer : AnalyzerBase
             },
             _ => new AnalysisResult // equal to current LTS
             {
-                Source = source,
+                Source = nameof(OutdatedFrameworkAnalyzer),
                 Code = AnalysisResultCode.Ok,
                 Parent = sdkProject,
                 Title = "Target Framework is current LTS",

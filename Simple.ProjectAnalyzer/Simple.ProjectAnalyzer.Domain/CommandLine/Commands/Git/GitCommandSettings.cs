@@ -1,13 +1,13 @@
 using System.ComponentModel;
 using Spectre.Console.Cli;
 
-namespace Simple.ProjectAnalyzer.Domain.CommandLine.Commands;
+namespace Simple.ProjectAnalyzer.Domain.CommandLine.Commands.Git;
 
-public class GitCommandSettings : CommandSettings, ICommandable
+public class GitCommandSettings : CommandSettings, ICommandSettings
 {
     [CommandOption("-p|--path <PATH>")]
-    [Description("Path to the git repository")]
-    public string Path { get; set; }
+    [Description("The location of the project file(s) to analyze.")]
+    public required string Path { get; set; }
 
     [CommandOption("-v|--verbose")]
     [Description("Enable verbose output.")]

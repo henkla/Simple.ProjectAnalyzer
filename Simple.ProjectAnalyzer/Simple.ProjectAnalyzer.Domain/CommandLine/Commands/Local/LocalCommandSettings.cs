@@ -1,12 +1,12 @@
 using System.ComponentModel;
 using Spectre.Console.Cli;
 
-namespace Simple.ProjectAnalyzer.Domain.CommandLine.Commands;
+namespace Simple.ProjectAnalyzer.Domain.CommandLine.Commands.Local;
 
-public class AnalyzeCommandSettings : CommandSettings, ICommandable
+public class LocalCommandSettings : CommandSettings, ICommandSettings
 {
     [CommandOption("-p|--path <PATH>")]
-    [Description("Path to the folder or .sln file to analyze.")]
+    [Description("The location of the project file(s) to analyze.")]
     public string? Path { get; set; }
 
     [CommandOption("-v|--verbose")]
@@ -17,6 +17,7 @@ public class AnalyzeCommandSettings : CommandSettings, ICommandable
     {
         if (Path is null || !Directory.Exists(Path))
         {
+            Output.Verbose("Path not specified - using current directory.");
             Path ??= Directory.GetCurrentDirectory();
         }
         

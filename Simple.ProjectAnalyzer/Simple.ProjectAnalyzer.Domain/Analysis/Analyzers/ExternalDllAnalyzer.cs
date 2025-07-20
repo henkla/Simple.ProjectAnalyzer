@@ -1,11 +1,14 @@
+using Simple.ProjectAnalyzer.Domain.CommandLine;
 using Simple.ProjectAnalyzer.Domain.Models;
 
 namespace Simple.ProjectAnalyzer.Domain.Analysis.Analyzers;
 
-public class ExternalDllAnalyzer : AnalyzerBase
+public class ExternalDllAnalyzer : IAnalyzer
 {
-    public override Task Run(ref Context context)
+    public Task Run(Context context)
     {
+        Output.Verbose($"{nameof(ExternalDllAnalyzer)}.{nameof(Run)} started");
+        
         foreach (var project in context.Projects)
         {
             var hasDllReferences = project.References.Count > 0;

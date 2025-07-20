@@ -1,4 +1,7 @@
+using Simple.ProjectAnalyzer.Domain.CommandLine;
 using Simple.ProjectAnalyzer.Domain.CommandLine.Commands;
+using Simple.ProjectAnalyzer.Domain.CommandLine.Commands.Git;
+using Simple.ProjectAnalyzer.Domain.CommandLine.Commands.Local;
 using Simple.ProjectAnalyzer.Domain.Models;
 using Spectre.Console;
 using Spectre.Console.Cli;
@@ -9,30 +12,35 @@ public static class ExceptionHandler
 {
     public static int OnException(Exception exception, ITypeResolver? resolver)
     {
-        var settings = ResolveAnalyzeSettings(resolver);
-
+        Output.Verbose($"{nameof(ExceptionHandler)}.{nameof(OnException)} started");
+        
+        var settings = ResolveCommandSettings(resolver);
         if (settings is not null && settings.Verbose)
         {
-            AnsiConsole.WriteException(exception, ExceptionFormats.ShowLinks);
+            Output.Exception(exception, ExceptionFormats.ShowLinks);
         }
         else
         {
-            AnsiConsole.WriteException(exception, ExceptionFormats.ShortenEverything);
+            Output.Exception(exception, ExceptionFormats.ShortenEverything);
         }
 
         return GetExitCode(exception);
     }
 
-    private static AnalyzeCommandSettings? ResolveAnalyzeSettings(ITypeResolver? resolver)
+    private static ICommandSettings? ResolveCommandSettings(ITypeResolver? resolver)
     {
+        Output.Verbose("Trying to resolve command settings");
+        
         try
         {
-            var settings = resolver?.Resolve(typeof(AnalyzeCommandSettings));
-            return settings as AnalyzeCommandSettings;
+            var settings = resolver?.Resolve(typeof(LocalCommandSettings)) 
+                           ?? resolver?.Resolve(typeof(GitCommandSettings));
+            
+            return settings as ICommandSettings;
         }
         catch (Exception exception)
         {
-            AnsiConsole.WriteException(exception);
+            Output.Exception(exception);
             return null;
         }
     }
@@ -40,6 +48,6 @@ public static class ExceptionHandler
     private static int GetExitCode(Exception exception)
     {
         // todo: find out which error code to return based on exception
-        return (int)ExitCode.Exception;
+        return (int)ApplicationExitCode.Exception;
     }
 }

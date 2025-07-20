@@ -1,4 +1,5 @@
 using Simple.ProjectAnalyzer.Domain.Analysis;
+using Simple.ProjectAnalyzer.Domain.CommandLine;
 using Simple.ProjectAnalyzer.Domain.Models;
 using Spectre.Console;
 
@@ -6,8 +7,10 @@ namespace Simple.ProjectAnalyzer.Domain.Services;
 
 public class ResultOutputHandler
 {
-    public void PrintResultToConsole(Context context)
+    public void ToConsole(Context context)
     {
+        Output.Verbose($"{nameof(ResultOutputHandler)}.{nameof(ToConsole)} started");
+        
         foreach (var project in context.Projects.OrderBy(p => p.Name))
         {
             AnsiConsole.WriteLine();
@@ -72,6 +75,22 @@ public class ResultOutputHandler
 
                 projectRoot.AddNode(referenceAnalysisRoot);
             }
+            
+            //      PROJECT REFERENCES 
+            
+            if (project.ProjectReferences.Count > 0)
+            {
+                var projectReferenceAnalysisRoot = new Tree("PROJECT REFERENCE ANALYSIS");
+                foreach (var projectReference in project.ProjectReferences)
+                {
+                    projectReferenceAnalysisRoot.AddNode($"{Path.GetFileNameWithoutExtension(projectReference)} [dim]{projectReference}[/]");
+                    
+                }
+
+                projectRoot.AddNode(projectReferenceAnalysisRoot);
+            }
+            
+            
             
             AnsiConsole.Write(projectRoot);
 

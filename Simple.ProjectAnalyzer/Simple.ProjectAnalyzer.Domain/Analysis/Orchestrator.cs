@@ -1,41 +1,33 @@
 using Simple.ProjectAnalyzer.Domain.Analysis.Analyzers;
-using Simple.ProjectAnalyzer.Domain.CommandLine.Commands;
-using Simple.ProjectAnalyzer.Domain.Models;
-using Simple.ProjectAnalyzer.Domain.Services;
+using Simple.ProjectAnalyzer.Domain.CommandLine;
 
 namespace Simple.ProjectAnalyzer.Domain.Analysis;
 
 public class Orchestrator(
-    PreReleasePackageReferenceAnalyzer  preReleasePackageReferenceAnalyzer,
-    CurrentLtsService currentLtsService,
+    PreReleasePackageReferenceAnalyzer preReleasePackageReferenceAnalyzer,
     LegacyProjectAnalyzer legacyProjectAnalyzer,
     OutdatedFrameworkAnalyzer outdatedFrameworkAnalyzer,
+    DuplicatePackageReferenceAnalyzer duplicatePackageReferenceAnalyzer,
+    OutCommentedCodeAnalyzer outCommentedCodeAnalyzer,
+    NullableNotEnabledAnalyzer nullableNotEnabledAnalyzer,
     ExternalDllAnalyzer  externalDllAnalyzer
 )
 {
-    public async Task<Context> AnalyzeProjects(List<Project> projectsToAnalyze, ICommandable commandSettings)
+    public async Task AnalyzeProjects(Context context)
     {
-        // in order to perform analysis on project files, we need to know 
-        // which version of dotnet that is current LTS
-        var currentLtsVersion = await currentLtsService.GetCurrentLtsVersion();
-
-        var context = new Context
-        {
-            Projects = projectsToAnalyze,
-            CommandSettings = commandSettings,
-            CurrentLtsVersion = currentLtsVersion
-        };
-            
-        var analysisTasks = new List<Task>()
-        {
-            legacyProjectAnalyzer.Run(ref context),
-            outdatedFrameworkAnalyzer.Run(ref context),
-            externalDllAnalyzer.Run(ref context),
-            preReleasePackageReferenceAnalyzer.Run(ref context)
-        };
+        Output.Verbose($"{nameof(Orchestrator)}.{nameof(AnalyzeProjects)} started");
         
-        Task.WhenAll(analysisTasks).Wait();
+        var analysisTasks = new List<Task>
+        {
+            legacyProjectAnalyzer.Run(context),
+            outdatedFrameworkAnalyzer.Run(context),
+            outCommentedCodeAnalyzer.Run(context),
+            externalDllAnalyzer.Run(context),
+            preReleasePackageReferenceAnalyzer.Run(context),
+            duplicatePackageReferenceAnalyzer.Run(context),
+            nullableNotEnabledAnalyzer.Run(context)
+        };
 
-        return context;
+        await Task.WhenAll(analysisTasks);
     }
 }

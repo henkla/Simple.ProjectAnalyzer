@@ -1,143 +1,136 @@
 using System.Text.RegularExpressions;
 using Simple.ProjectAnalyzer.Domain.CommandLine;
-using Simple.ProjectAnalyzer.Domain.CommandLine.Commands;
 
 namespace Simple.ProjectAnalyzer.Domain.Services;
 
-public class ProjectFinder
+public partial class ProjectFinder
 {
-    public List<string> FindProjectFiles(string path, bool verbose)
+    private static readonly string[] IgnoredDirectories = ["bin", "obj", ".git", ".vs", ".idea" ];
+    private const string ProjectFileExtension = "*.csproj";
+    private const string SolutionFileExtension = "*.sln";
+
+    [GeneratedRegex("^Project\\(\"{.*}\"\\) = \".*\", \"(.*\\.csproj)\", \".*\"$", RegexOptions.IgnoreCase, "sv-SE")]
+    private static partial Regex SolutionFileRegex();
+    
+    public List<string> FindProjectFiles(string path)
     {
-        if (verbose)
+        Output.Verbose($"{nameof(ProjectFinder)}.{nameof(FindProjectFiles)} started");
+        Output.Verbose($"Ignored directories: {string.Join(", ", IgnoredDirectories)}");
+        Output.Verbose($"Starting path: {path}");
+
+        var projectFiles = GetProjectFilesInPathDirectory(path);
+        if (projectFiles.Count != 0)
         {
-            Writer.WriteVerbose("Looking for project files...");
-            Writer.WriteVerbose($"Path: {path}");
+            Output.Verbose($"Found {projectFiles.Count} project file(s) in provided path directory");
+            return projectFiles;
         }
 
-        // 1) Kolla om det finns csproj-filer i just startPath (icke rekursivt), exkludera bin/obj
-        var csprojFiles = Directory.EnumerateFiles(path, "*.csproj", SearchOption.TopDirectoryOnly)
-            .Where(p => !IsInIgnoredDir(p))
-            .ToList();
-
-        if (csprojFiles.Count != 0)
+        projectFiles = GetProjectFilesBelowPathDirectory(path);
+        if (projectFiles.Count != 0)
         {
-            if (verbose)
-            {
-                Writer.WriteVerbose($"Found {csprojFiles.Count} project(s)");
-            }
-
-            return csprojFiles;
+            Output.Verbose($"Found {projectFiles.Count} project file(s) recursively below provided path directory");
+            return projectFiles;
         }
 
-        // 2) Leta rekursivt neråt i alla barn-mappar, exkludera bin/obj
-        csprojFiles = GetAllCsprojFilesRecursive(path);
-        if (csprojFiles.Count != 0)
+        projectFiles = GetProjectFilesAbovePathDirectory(path);
+        if (projectFiles.Count != 0)
         {
-            if (verbose)
-            {
-                Writer.WriteVerbose($"Found {csprojFiles.Count} project(s)");
-            }
-
-            return csprojFiles;
+            Output.Verbose($"Found {projectFiles.Count} project file(s) above path directory");
         }
 
-        // 3) Leta uppåt tills vi hittar en csproj-fil, returnera alla csproj i den mappen
-        var dir = new DirectoryInfo(path);
-        while (dir != null)
+        projectFiles = GetProjectFilesFromSolutionFileAbovePathDirectory(path);
+        if (projectFiles.Count != 0)
         {
-            csprojFiles = Directory.EnumerateFiles(dir.FullName, "*.csproj", SearchOption.TopDirectoryOnly)
-                .Where(p => !IsInIgnoredDir(p))
-                .ToList();
-
-            if (csprojFiles.Count != 0)
-            {
-                if (verbose)
-                {
-                    Writer.WriteVerbose($"Found {csprojFiles.Count} project(s)");
-                }
-                
-                return csprojFiles;
-            }
-
-            dir = dir.Parent;
+            Output.Verbose($"Found {projectFiles.Count} project file(s) from solution file above path directory");
         }
 
-        // 4) Leta uppåt tills vi hittar en sln-fil, plocka ut csproj-filer som finns i den
-        dir = new DirectoryInfo(path);
-        while (dir != null)
-        {
-            var slnFiles = Directory.EnumerateFiles(dir.FullName, "*.sln", SearchOption.TopDirectoryOnly).ToList();
-            if (slnFiles.Count != 0)
-            {
-                // Ta första sln-filen (om flera finns)
-                var slnFile = slnFiles.First();
-                var projectsInSln = ParseProjectsFromSln(slnFile);
+        Output.Verbose("No project file(s) found");
+        return [];
+    }
 
-                // Konvertera ev. relativa sökvägar i sln till absoluta sökvägar
-                var csprojPaths = projectsInSln
-                    .Select(projPath => Path.GetFullPath(Path.Combine(dir.FullName, projPath)))
-                    .Where(p => File.Exists(p) && !IsInIgnoredDir(p))
+    private List<string> GetProjectFilesFromSolutionFileAbovePathDirectory(string path)
+    {
+        var directory = new DirectoryInfo(path);
+
+        while (directory is not null)
+        {
+            var solutionFiles = Directory.EnumerateFiles(directory.FullName, SolutionFileExtension, SearchOption.TopDirectoryOnly).ToList();
+            if (solutionFiles.Count != 0)
+            {
+                var solutionFile = solutionFiles.First();
+                var projectsInSln = ParseProjectFilesFromSolutionFile(solutionFile);
+
+                var projectFiles = projectsInSln
+                    .Select(projectFile => Path.GetFullPath(Path.Combine(directory.FullName, projectFile)))
+                    .Where(p => File.Exists(p) && !IsInIgnoredDirectory(p))
                     .ToList();
 
-                if (csprojPaths.Count != 0)
+                if (projectFiles.Count != 0)
                 {
-                    if (verbose)
-                    {
-                        Writer.WriteVerbose($"Found {csprojPaths.Count} project(s)");
-                    }
-                    
-                    return csprojFiles;
+                    return projectFiles;
                 }
             }
 
-            dir = dir.Parent;
-        }
-
-        if (verbose)
-        {
-            Writer.WriteVerbose("No project(s) found");
+            directory = directory.Parent;
         }
 
         return [];
     }
-    
-    public List<string> FindProjectFiles(ICommandable commandSettings)
+
+    private static List<string> GetProjectFilesAbovePathDirectory(string path)
     {
-        return FindProjectFiles(commandSettings.Path, commandSettings.Verbose);
+        var directory = new DirectoryInfo(path);
+
+        while (directory != null)
+        {
+            var projectFiles = Directory.EnumerateFiles(directory.FullName, "*.csproj", SearchOption.TopDirectoryOnly)
+                .Where(p => !IsInIgnoredDirectory(p))
+                .ToList();
+
+            if (projectFiles.Count != 0)
+            {
+                return projectFiles;
+            }
+
+            directory = directory.Parent;
+        }
+
+        return [];
     }
 
-    private bool IsInIgnoredDir(string filePath)
+    private static List<string> GetProjectFilesInPathDirectory(string path)
     {
-        var ignoredDirs = new[] { "bin", "obj", ".git", ".vs", ".idea" };
-        var dirParts = Path.GetDirectoryName(filePath)?.Split(Path.DirectorySeparatorChar) ?? Array.Empty<string>();
-        return dirParts.Any(part => ignoredDirs.Contains(part, StringComparer.OrdinalIgnoreCase));
-    }
-
-    private List<string> GetAllCsprojFilesRecursive(string rootPath)
-    {
-        return Directory.EnumerateFiles(rootPath, "*.csproj", SearchOption.AllDirectories)
-            .Where(path => !IsInIgnoredDir(path))
+        return Directory.EnumerateFiles(path, ProjectFileExtension, SearchOption.TopDirectoryOnly)
+            .Where(p => !IsInIgnoredDirectory(p))
             .ToList();
     }
 
-    private List<string> ParseProjectsFromSln(string slnFile)
+    private static bool IsInIgnoredDirectory(string path)
     {
-        var projectPaths = new List<string>();
-        var lines = File.ReadAllLines(slnFile);
+        var directoryParts = Path.GetDirectoryName(path)?.Split(Path.DirectorySeparatorChar) ?? [];
+        return directoryParts.Any(part => IgnoredDirectories.Contains(part, StringComparer.OrdinalIgnoreCase));
+    }
 
-        // Exempelrad i .sln:
-        // Project("{GUID}") = "ProjectName", "relative\path\to\project.csproj", "{GUID}"
-        var regex = new Regex("^Project\\(\"{.*}\"\\) = \".*\", \"(.*\\.csproj)\", \".*\"$", RegexOptions.IgnoreCase);
+    private static List<string> GetProjectFilesBelowPathDirectory(string path)
+    {
+        return Directory.EnumerateFiles(path, ProjectFileExtension, SearchOption.AllDirectories)
+            .Where(p => !IsInIgnoredDirectory(p))
+            .ToList();
+    }
 
-        foreach (var line in lines)
+    private static List<string> ParseProjectFilesFromSolutionFile(string path)
+    {
+        var projectFiles = new List<string>();
+
+        foreach (var line in File.ReadAllLines(path))
         {
-            var match = regex.Match(line);
-            if (match.Success && match.Groups.Count > 1)
+            var match = SolutionFileRegex().Match(line);
+            if (match is { Success: true, Groups.Count: > 1 })
             {
-                projectPaths.Add(match.Groups[1].Value.Replace('/', Path.DirectorySeparatorChar));
+                projectFiles.Add(match.Groups[1].Value.Replace('/', Path.DirectorySeparatorChar));
             }
         }
 
-        return projectPaths;
+        return projectFiles;
     }
 }

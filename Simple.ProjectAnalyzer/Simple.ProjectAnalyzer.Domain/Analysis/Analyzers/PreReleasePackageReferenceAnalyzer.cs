@@ -1,14 +1,17 @@
 using System.Text.RegularExpressions;
+using Simple.ProjectAnalyzer.Domain.CommandLine;
 using Simple.ProjectAnalyzer.Domain.Models;
 
 namespace Simple.ProjectAnalyzer.Domain.Analysis.Analyzers;
 
-public class PreReleasePackageReferenceAnalyzer : AnalyzerBase
+public class PreReleasePackageReferenceAnalyzer : IAnalyzer
 {
     private static readonly Regex PreReleaseRegex = new(@"-\w+", RegexOptions.Compiled);
 
-    public override Task Run(ref Context context)
+    public Task Run(Context context)
     {
+        Output.Verbose($"{nameof(PreReleasePackageReferenceAnalyzer)}.{nameof(Run)} started");
+        
         foreach (var project in context.Projects)
         {
             if (project.PackageReferences.Count == 0)

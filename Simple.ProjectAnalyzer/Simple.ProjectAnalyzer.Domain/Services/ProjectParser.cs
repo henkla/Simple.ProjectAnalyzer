@@ -1,57 +1,126 @@
 using System.Text.RegularExpressions;
 using System.Xml.Linq;
+using Simple.ProjectAnalyzer.Domain.CommandLine;
 using Simple.ProjectAnalyzer.Domain.Models;
 
 namespace Simple.ProjectAnalyzer.Domain.Services
 {
-    public class ProjectParser
+    public partial class ProjectParser
     {
-        public Project Parse(string projectFile)
+        [GeneratedRegex(@"^\d{1,3}$")]
+        private static partial Regex VersionPartRegex();
+
+        [GeneratedRegex(@"^net[1-4]\d{1,2}$")]
+        private static partial Regex FrameworkTypeRegex();
+
+        public Project ParseProjectFile(string projectFile)
         {
+            Output.Verbose($"{nameof(ProjectParser)}.{nameof(ParseProjectFile)} started: {projectFile}");
+
             if (!File.Exists(projectFile))
             {
                 throw new FileNotFoundException("Project file not found", projectFile);
             }
 
-            var xdoc = XDocument.Load(projectFile);
-            var ns = xdoc.Root?.Name.Namespace ?? XNamespace.None;
+            var xDocument = XDocument.Load(projectFile);
+            var xNamespace = xDocument.Root?.Name.Namespace ?? XNamespace.None;
 
             var name = Path.GetFileNameWithoutExtension(projectFile);
+            var sdk = ParseSdk(xDocument);
+            var nullableEnabled = ParseNullableProperty(xDocument, xNamespace);
+            var packageReferences = ParsePackageReferences(xDocument, xNamespace);
+            var projectReferences = ParseProjectReferences(xDocument, xNamespace);
+            var references = ParseReferences(xDocument, xNamespace);
+            var targetFrameworks = ParseTargetFrameworks(xDocument, xNamespace, out var projectFileIsOfLegacyType);
 
-            var sdk = xdoc.Root?.Attribute("Sdk")?.Value?.Trim();
+            return new Project
+            {
+                Name = name,
+                Path = projectFile,
+                Sdk = sdk,
+                NullableEnabled = nullableEnabled,
+                IsLegacy = projectFileIsOfLegacyType,
+                PackageReferences = packageReferences,
+                ProjectReferences = projectReferences,
+                References = references,
+                TargetFrameworks = targetFrameworks
+            };
+        }
 
-            var packageReferences = xdoc
-                .Descendants(ns + "PackageReference")
-                .Select(pr =>
+        private static bool? ParseNullableProperty(XDocument xDocument, XNamespace xNamespace)
+        {
+            var nullableElement = xDocument
+                .Descendants(xNamespace + "Nullable")
+                .FirstOrDefault();
+
+            return nullableElement != null
+                ? string.Equals(nullableElement.Value.Trim(), "enable", StringComparison.OrdinalIgnoreCase)
+                : null;
+        }
+
+        private List<TargetFramework> ParseTargetFrameworks(XDocument xDocument, XNamespace xNamespace, out bool projectFileIsOfLegacyType)
+        {
+            projectFileIsOfLegacyType = false;
+            var targetFrameworkRaw = xDocument.Descendants(xNamespace + "TargetFramework").FirstOrDefault();
+            var targetFrameworksRaw = xDocument.Descendants(xNamespace + "TargetFrameworks").FirstOrDefault();
+
+            var targetFrameworks = new List<TargetFramework>();
+
+            if (targetFrameworksRaw is not null)
+            {
+                var targetFrameworksRawSplit = targetFrameworksRaw.Value.Split(';', StringSplitOptions.RemoveEmptyEntries);
+                foreach (var targetFramework in targetFrameworksRawSplit)
                 {
-                    var include = pr.Attribute("Include")?.Value ?? string.Empty;
-                    var versionAttr = pr.Attribute("Version")?.Value;
-                    var versionElem = pr.Element(ns + "Version")?.Value;
+                    targetFrameworks.Add(ParseTargetFramework(targetFramework.Trim()));
+                }
+            }
+            else if (targetFrameworkRaw is not null)
+            {
+                targetFrameworks.Add(ParseTargetFramework(targetFrameworkRaw.Value.Trim()));
+            }
+            else
+            {
+                // Om inte hittat TargetFramework(s), prova med UWP / äldre .NET projektelement
+                projectFileIsOfLegacyType = true;
 
-                    return new PackageReference
-                    {
-                        Name = include,
-                        Include = include,
-                        Version = versionAttr ?? versionElem ?? string.Empty
-                    };
-                })
-                .ToList();
+                var platformId = xDocument.Descendants(xNamespace + "TargetPlatformIdentifier").FirstOrDefault()?.Value;
+                var platformVersion = xDocument.Descendants(xNamespace + "TargetPlatformVersion").FirstOrDefault()?.Value;
+                var frameworkVersion = xDocument.Descendants(xNamespace + "TargetFrameworkVersion").FirstOrDefault()?.Value;
 
-            var projectReferences = xdoc
-                .Descendants(ns + "ProjectReference")
-                .Select(pr => pr.Attribute("Include")?.Value ?? string.Empty)
-                .Where(x => !string.IsNullOrEmpty(x))
-                .ToList();
+                if (!string.IsNullOrEmpty(platformId) && !string.IsNullOrEmpty(platformVersion))
+                {
+                    // Exempel: uap10.0, windows10.0.19041.0
+                    var combinedTargetFramework = platformId.Trim() + platformVersion.Trim();
+                    targetFrameworks.Add(ParseTargetFramework(combinedTargetFramework));
+                }
+                else if (!string.IsNullOrEmpty(frameworkVersion))
+                {
+                    // Exempel: v4.7.2
+                    targetFrameworks.Add(ParseTargetFramework(frameworkVersion.TrimStart('v', 'V')));
+                }
+                else
+                {
+                    Output.Error("Unable to parse TargetFramework or platform identifiers");
+                }
+            }
 
-            var references = xdoc
-                .Descendants(ns + "Reference")
+            return targetFrameworks;
+        }
+
+        private static List<Reference> ParseReferences(XDocument xDocument, XNamespace xNamespace)
+        {
+            return xDocument
+                .Descendants(xNamespace + "Reference")
                 .Select(r =>
                 {
                     var type = r.Attribute("Include")?.Value ?? string.Empty;
-                    var hintPath = r.Element(ns + "HintPath")?.Value ?? string.Empty;
-                    var privateStr = r.Element(ns + "Private")?.Value ?? "false";
+                    var hintPath = r.Element(xNamespace + "HintPath")?.Value ?? string.Empty;
+                    var privateValue = r.Element(xNamespace + "Private")?.Value ?? "false";
 
-                    bool.TryParse(privateStr, out bool isPrivate);
+                    if (bool.TryParse(privateValue, out var isPrivate))
+                    {
+                        Output.Warning("Unable to parse private value for Reference");
+                    }
 
                     return new Reference
                     {
@@ -61,179 +130,174 @@ namespace Simple.ProjectAnalyzer.Domain.Services
                     };
                 })
                 .ToList();
+        }
 
-            // Först leta efter TargetFrameworks / TargetFramework
-            var tfElem = xdoc.Descendants(ns + "TargetFramework").FirstOrDefault();
-            var tfsElem = xdoc.Descendants(ns + "TargetFrameworks").FirstOrDefault();
+        private static List<string> ParseProjectReferences(XDocument xDocument, XNamespace xNamespace)
+        {
+            return xDocument
+                .Descendants(xNamespace + "ProjectReference")
+                .Select(pr => pr.Attribute("Include")?.Value ?? string.Empty)
+                .Where(x => !string.IsNullOrEmpty(x))
+                .ToList();
+        }
 
-            List<TargetFramework> targetFrameworks = new();
-            var projectFileIsOfLegacyType = false;
-            
-            if (tfsElem != null)
-            {
-                var rawTfs = tfsElem.Value.Split(';', StringSplitOptions.RemoveEmptyEntries);
-                foreach (var rawTf in rawTfs)
+        private static string? ParseSdk(XDocument xDocument)
+        {
+            return xDocument.Root?.Attribute("Sdk")?.Value.Trim();
+        }
+
+        private static List<PackageReference> ParsePackageReferences(XDocument xDocument, XNamespace xNamespace)
+        {
+            return xDocument
+                .Descendants(xNamespace + "PackageReference")
+                .Select(pr =>
                 {
-                    targetFrameworks.Add(ParseTargetFramework(rawTf.Trim()));
-                }
-            }
-            else if (tfElem != null)
-            {
-                targetFrameworks.Add(ParseTargetFramework(tfElem.Value.Trim()));
-            }
-            else
-            {
-                // Om inte hittat TargetFramework(s), prova med UWP / äldre .NET projektelement
-                projectFileIsOfLegacyType = true;
-                var platformId = xdoc.Descendants(ns + "TargetPlatformIdentifier").FirstOrDefault()?.Value;
-                var platformVersion = xdoc.Descendants(ns + "TargetPlatformVersion").FirstOrDefault()?.Value;
-                var frameworkVersion = xdoc.Descendants(ns + "TargetFrameworkVersion").FirstOrDefault()?.Value;
+                    var include = pr.Attribute("Include")?.Value ?? string.Empty;
+                    var versionAttribute = pr.Attribute("Version")?.Value;
+                    var versionElement = pr.Element(xNamespace + "Version")?.Value;
 
-                if (!string.IsNullOrEmpty(platformId) && !string.IsNullOrEmpty(platformVersion))
-                {
-                    // Exempel: uap10.0, windows10.0.19041.0
-                    var combinedTf = platformId.Trim() + platformVersion.Trim();
+                    if (versionAttribute is null && versionElement is null)
+                    {
+                        Output.Warning("Unable to parse PackageReference version");
+                    }
 
-                    targetFrameworks.Add(ParseTargetFramework(combinedTf));
-                }
-                else if (!string.IsNullOrEmpty(frameworkVersion))
-                {
-                    // Exempel: v4.7.2
-                    targetFrameworks.Add(ParseTargetFramework(frameworkVersion.TrimStart('v', 'V')));
-                }
-                else
-                {
-                    throw new ProjectAnalyzerException("Unable to parse TargetFramework or platform identifiers");
-                }
-            }
+                    return new PackageReference
+                    {
+                        Name = include,
+                        Include = include,
+                        Version = versionAttribute ?? versionElement ?? string.Empty
+                    };
+                })
+                .ToList();
+        }
 
-            return new Project
+        public List<Project> ParseProjectFiles(List<string> projectFiles)
+        {
+            return projectFiles.Select(ParseProjectFile).ToList();
+        }
+
+        private TargetFramework ParseTargetFramework(string targetFrameworkRaw)
+        {
+            var version = ParseVersionFromTargetFramework(targetFrameworkRaw);
+            var type = ParseFrameworkType(targetFrameworkRaw);
+            return new TargetFramework
             {
-                Name = name,
-                Path = projectFile,
-                Sdk = sdk,
-                IsLegacy = projectFileIsOfLegacyType,
-                PackageReferences = packageReferences,
-                ProjectReferences = projectReferences,
-                References = references,
-                TargetFrameworks = targetFrameworks
+                Alias = targetFrameworkRaw,
+                Version = version,
+                Type = type
             };
         }
 
-        public List<Project> ParseMany(List<string> projectFiles)
+        private string ParseFrameworkType(string targetFramework)
         {
-            return projectFiles.Select(Parse).ToList();
+            targetFramework = targetFramework.ToLowerInvariant();
+
+            var frameworkType = targetFramework switch
+            {
+                not null when targetFramework.StartsWith("netstandard") => "netstandard",
+                not null when targetFramework.StartsWith("netcoreapp") => "netcoreapp",
+                not null when targetFramework.StartsWith("net") && FrameworkTypeRegex().IsMatch(targetFramework) => ".netframework",
+                not null when targetFramework.StartsWith("net") => "net", // .NET 5+
+                not null when targetFramework.StartsWith("uap") => "uwp",
+                not null when targetFramework.StartsWith("windows") => "uwp",
+                _ => null
+            };
+
+            if (frameworkType is null)
+            {
+                Output.Error("Unable to parse TargetFramework type");
+                return "unknown";
+            }
+
+            return frameworkType;
         }
 
-        private TargetFramework ParseTargetFramework(string rawTf)
+        private Version ParseVersionFromTargetFramework(string targetFramework)
         {
-            var alias = rawTf;
-            var version = ParseVersionFromTargetFramework(rawTf);
-            var type = ParseFrameworkType(rawTf);
-            return new TargetFramework { Alias = alias, Version = version, Type = type };
-        }
-
-        private string ParseFrameworkType(string tf)
-        {
-            tf = tf.ToLowerInvariant();
-
-            if (tf.StartsWith("netstandard"))
-                return "netstandard";
-
-            if (tf.StartsWith("netcoreapp"))
-                return "netcoreapp";
-
-            if (tf.StartsWith("net") && Regex.IsMatch(tf, @"^net[1-4]\d{1,2}$"))
-                return ".netframework";
-
-            if (tf.StartsWith("net"))
-                return "net"; // .NET 5+
-
-            if (tf.StartsWith("uap"))
-                return "uwp";
-
-            if (tf.StartsWith("windows"))
-                return "uwp";
-
-            return "unknown";
-        }
-
-        private Version ParseVersionFromTargetFramework(string tf)
-        {
-            if (string.IsNullOrEmpty(tf))
+            if (string.IsNullOrEmpty(targetFramework))
+            {
+                Output.Error("Unable to parse version from null or empty TargetFramework");
                 return new Version(0, 0);
+            }
 
-            var mainPart = tf.Split('-')[0];
+            var mainPart = targetFramework.Split('-')[0];
+            var versionPart = mainPart switch
+            {
+                not null when mainPart.StartsWith("netstandard") => mainPart["netstandard".Length..],
+                not null when mainPart.StartsWith("netcoreapp") => mainPart["netcoreapp".Length..],
+                not null when mainPart.StartsWith("net") => mainPart["net".Length..],
+                not null when mainPart.StartsWith("uap") => mainPart["uap".Length..],
+                not null when mainPart.StartsWith("windows") => mainPart["windows".Length..],
+                _ => mainPart
+            };
 
-            // Ta bort prefix som "netstandard", "netcoreapp", "net", "uap", "windows"
-            string versionPart = mainPart;
-            if (mainPart.StartsWith("netstandard"))
-                versionPart = mainPart.Substring("netstandard".Length);
-            else if (mainPart.StartsWith("netcoreapp"))
-                versionPart = mainPart.Substring("netcoreapp".Length);
-            else if (mainPart.StartsWith("net"))
-                versionPart = mainPart.Substring("net".Length);
-            else if (mainPart.StartsWith("uap"))
-                versionPart = mainPart.Substring("uap".Length);
-            else if (mainPart.StartsWith("windows"))
-                versionPart = mainPart.Substring("windows".Length);
+            versionPart = versionPart?.Trim('.', ' ');
 
-            versionPart = versionPart.Trim('.', ' ');
-
-            // Ta max 3 delar av versionen (för att undvika fel med tex 10.0.19041.0)
-            var versionParts = versionPart.Split('.', StringSplitOptions.RemoveEmptyEntries);
-            if (versionParts.Length > 3)
+            // ta max 3 delar av versionen - för att undvika fel med tex 10.0.19041.0
+            var versionParts = versionPart?.Split('.', StringSplitOptions.RemoveEmptyEntries);
+            if (versionParts is { Length: > 3 })
+            {
                 versionParts = versionParts.Take(3).ToArray();
+            }
 
-            if (versionParts.Length == 0)
+            if (versionParts is { Length: 0 } or null)
+            {
+                Output.Error("Unable to parse version from TargetFramework");
                 return new Version(0, 0);
+            }
 
             try
             {
-                // Bygg version utifrån tillgängliga delar
-                int major = 0, minor = 0, build = 0;
+                var major = 0;
+                var minor = 0;
+                var build = 0;
 
                 if (versionParts.Length > 0)
+                {
                     major = int.Parse(versionParts[0]);
-                if (versionParts.Length > 1)
-                    minor = int.Parse(versionParts[1]);
-                if (versionParts.Length > 2)
-                    build = int.Parse(versionParts[2]);
+                }
 
-                if (build > 0)
-                    return new Version(major, minor, build);
-                else
-                    return new Version(major, minor);
+                if (versionParts.Length > 1)
+                {
+                    minor = int.Parse(versionParts[1]);
+                }
+
+                if (versionParts.Length > 2)
+                {
+                    build = int.Parse(versionParts[2]);
+                }
+
+                return build > 0
+                    ? new Version(major, minor, build)
+                    : new Version(major, minor);
             }
             catch
             {
                 // fallback för specialfall, t.ex. 461 som betyder 4.6.1
-                var digits = Regex.Match(versionPart, @"^\d{1,3}$");
+                var digits = VersionPartRegex().Match(versionPart!);
                 if (digits.Success)
                 {
-                    var val = digits.Value;
-                    if (val.Length == 3)
+                    var value = digits.Value;
+                    switch (value.Length)
                     {
-                        return new Version(
-                            int.Parse(val[0].ToString()),
-                            int.Parse(val[1].ToString()),
-                            int.Parse(val[2].ToString())
-                        );
-                    }
-                    else if (val.Length == 2)
-                    {
-                        return new Version(
-                            int.Parse(val[0].ToString()),
-                            int.Parse(val[1].ToString())
-                        );
-                    }
-                    else if (val.Length == 1)
-                    {
-                        return new Version(int.Parse(val[0].ToString()), 0);
+                        case 3:
+                            return new Version(
+                                int.Parse(value[0].ToString()),
+                                int.Parse(value[1].ToString()),
+                                int.Parse(value[2].ToString())
+                            );
+                        case 2:
+                            return new Version(
+                                int.Parse(value[0].ToString()),
+                                int.Parse(value[1].ToString())
+                            );
+                        case 1:
+                            return new Version(int.Parse(value[0].ToString()), 0);
                     }
                 }
             }
 
+            Output.Error("Unable to parse version from TargetFramework");
             return new Version(0, 0);
         }
     }

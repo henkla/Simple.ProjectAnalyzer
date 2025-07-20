@@ -1,6 +1,6 @@
 namespace Simple.ProjectAnalyzer.Domain.Models;
 
-public enum ExitCode
+public enum ApplicationExitCode
 {
     Ok = 0,
     

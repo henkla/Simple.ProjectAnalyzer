@@ -1,11 +1,14 @@
+using Simple.ProjectAnalyzer.Domain.CommandLine;
 using Simple.ProjectAnalyzer.Domain.Models;
 
 namespace Simple.ProjectAnalyzer.Domain.Analysis.Analyzers;
 
-public class LegacyProjectAnalyzer : AnalyzerBase
+public class LegacyProjectAnalyzer : IAnalyzer
 {
-    public override Task Run(ref Context context)
+    public Task Run(Context context)
     {
+        Output.Verbose($"{nameof(LegacyProjectAnalyzer)}.{nameof(Run)} started");
+        
         var currentLtsVersion = context.CurrentLtsVersion.Alias;
         
         context.Projects
@@ -25,7 +28,7 @@ public class LegacyProjectAnalyzer : AnalyzerBase
             }));
 
         context.Projects
-            .Where(p => p.TargetFrameworks.Any(tf => tf.Version.Major is > 0 and < 5))
+            .Where(p => p.TargetFrameworks.All(tf => tf.Version.Major is > 0 and < 5))
             .ToList()
             .ForEach(legacyProject => legacyProject.AnalysisResults.Add(new AnalysisResult
             {
@@ -33,12 +36,9 @@ public class LegacyProjectAnalyzer : AnalyzerBase
                 Code = AnalysisResultCode.Warning,
                 Parent = legacyProject,
                 Title = "Legacy project",
-                Message = "Project targets a legacy .NET version (< .NET 5). Consider upgrading.",
-                Details = "This project is using a legacy .NET framework or .NET Core version (older than .NET 5), " +
-                          "which no longer receives active feature development or long-term support " +
-                          "from Microsoft. Upgrading to .NET 6 or later (preferably a current LTS " +
-                          "version) is recommended to ensure security, performance, compatibility " +
-                          "with modern libraries, and access to the latest language features.",
+                Message = "Project targets only legacy .NET versions (< .NET 5). Consider upgrading.",
+                Details = "All target frameworks for this project are legacy .NET Framework/Core versions (older than .NET 5). " +
+                          "None of them are targeting modern LTS platforms. Upgrade is strongly recommended.",
                 Recommendation = $"Consider targeting current LTS version ({currentLtsVersion})."
             }));
 
