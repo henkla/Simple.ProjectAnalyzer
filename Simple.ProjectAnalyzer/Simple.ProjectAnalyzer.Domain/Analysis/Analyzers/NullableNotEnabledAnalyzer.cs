@@ -5,6 +5,18 @@ namespace Simple.ProjectAnalyzer.Domain.Analysis.Analyzers;
 
 public class NullableNotEnabledAnalyzer : IAnalyzer
 {
+    public string Description => "Analyzes project files to determine whether nullable reference types are " +
+                                 "properly configured. Projects without explicit <Nullable> settings, or with " +
+                                 "nullability disabled, risk introducing null-related bugs that could have been " +
+                                 "caught at compile time. This analyzer encourages enabling nullable reference types " +
+                                 "to improve code safety, clarity, and consistency across the codebase.";
+    
+    public IEnumerable<AnalysisResultCode> ResultCodes => [
+        AnalysisResultCode.Hint, 
+        AnalysisResultCode.Warning, 
+        AnalysisResultCode.Ok
+    ];
+    
     public Task Run(Context context)
     {
         Output.Verbose($"{nameof(NullableNotEnabledAnalyzer)}.{nameof(Run)} started");

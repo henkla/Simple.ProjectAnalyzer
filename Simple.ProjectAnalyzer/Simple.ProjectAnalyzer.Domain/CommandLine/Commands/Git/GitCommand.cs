@@ -19,6 +19,7 @@ public class GitCommand(GitCommandHandler gitCommandHandler) : AsyncCommand<GitC
             Output.EnableVerboseOutput();
         }
         
+        
         var context = await gitCommandHandler.HandleCommand(commandSettings);
 
         return (int)context.ApplicationExitCode;

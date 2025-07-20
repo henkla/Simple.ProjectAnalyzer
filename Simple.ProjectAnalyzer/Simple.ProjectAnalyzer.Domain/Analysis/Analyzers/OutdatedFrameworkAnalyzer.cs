@@ -5,6 +5,15 @@ namespace Simple.ProjectAnalyzer.Domain.Analysis.Analyzers;
 
 public class OutdatedFrameworkAnalyzer : IAnalyzer
 {
+    public string Description => "Analyzes project files to detect whether target frameworks are outdated " +
+                                 "in relation to the current .NET Long-Term Support (LTS) version. Projects " +
+                                 "targeting frameworks older than the current LTS may miss out on critical " +
+                                 "security updates, performance improvements, and modern features. This analyzer " +
+                                 "highlights such projects and recommends upgrading to the current LTS to ensure " +
+                                 "long-term stability and support.";
+    
+    public IEnumerable<AnalysisResultCode> ResultCodes => [AnalysisResultCode.Warning, AnalysisResultCode.Ok];
+    
     public Task Run(Context context)
     {
         Output.Verbose($"{nameof(OutdatedFrameworkAnalyzer)}.{nameof(Run)} started");

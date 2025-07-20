@@ -6,6 +6,14 @@ namespace Simple.ProjectAnalyzer.Domain.Analysis.Analyzers;
 
 public class PreReleasePackageReferenceAnalyzer : IAnalyzer
 {
+    public string Description => "Analyzes project files to detect NuGet package references that use " +
+                                 "pre-release versions. Pre-release packages may contain unfinished features, " +
+                                 "breaking changes, or unstable code, which can introduce risks in production " +
+                                 "environments. This analyzer helps identify such packages so teams can evaluate " +
+                                 "whether to replace them with stable releases for improved reliability and support.";
+    
+    public IEnumerable<AnalysisResultCode> ResultCodes => [AnalysisResultCode.Hint, AnalysisResultCode.Ok];
+    
     private static readonly Regex PreReleaseRegex = new(@"-\w+", RegexOptions.Compiled);
 
     public Task Run(Context context)

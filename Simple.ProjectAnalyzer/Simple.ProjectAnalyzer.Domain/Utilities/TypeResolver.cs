@@ -1,16 +1,25 @@
-using Microsoft.Extensions.DependencyInjection;
+using Simple.ProjectAnalyzer.Domain.CommandLine;
 using Spectre.Console.Cli;
 
 namespace Simple.ProjectAnalyzer.Domain.Utilities;
 
-public sealed class TypeResolver(ServiceProvider provider) : ITypeResolver, IDisposable
+public sealed class TypeResolver(IServiceProvider serviceProvider) : ITypeResolver
 {
-    public object? Resolve(Type? type) => type == null
-        ? null
-        : provider.GetService(type);
-
-    public void Dispose()
+    public object? Resolve(Type? type)
     {
-        provider.Dispose();
+        if (type is null)
+        {
+            Output.Error("TypeResolver.Resolve: type is null");
+            return null;
+        }
+        
+        return serviceProvider.GetService(type);
+    }
+
+    public IEnumerable<object> ResolveAll(Type type)
+    {
+        var genericEnumerableType = typeof(IEnumerable<>).MakeGenericType(type);
+        var services = (IEnumerable<object>?)serviceProvider.GetService(genericEnumerableType);
+        return services ?? [];
     }
 }

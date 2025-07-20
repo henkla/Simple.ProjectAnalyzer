@@ -1,6 +1,7 @@
 ﻿using System.Globalization;
 using Microsoft.Extensions.DependencyInjection;
 using Simple.ProjectAnalyzer;
+using Simple.ProjectAnalyzer.Domain.CommandLine.Commands.Analyzers;
 using Simple.ProjectAnalyzer.Domain.CommandLine.Commands.Git;
 using Simple.ProjectAnalyzer.Domain.CommandLine.Commands.Local;
 using Simple.ProjectAnalyzer.Domain.Extensions;
@@ -21,6 +22,9 @@ application.Configure(config =>
 
     config.AddCommand<LocalCommand>(LocalCommand.Name)
         .WithDescription(LocalCommand.Description);
+    
+    config.AddCommand<AnalyzersCommand>(AnalyzersCommand.Name)
+        .WithDescription(AnalyzersCommand.Description);
 
     config.TrimTrailingPeriods(true);
     config.UseAssemblyInformationalVersion();

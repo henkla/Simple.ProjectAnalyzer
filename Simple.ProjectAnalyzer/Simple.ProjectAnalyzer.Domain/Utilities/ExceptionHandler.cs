@@ -27,7 +27,7 @@ public static class ExceptionHandler
         return GetExitCode(exception);
     }
 
-    private static ICommandSettings? ResolveCommandSettings(ITypeResolver? resolver)
+    private static IAnalyzeCommandSettings? ResolveCommandSettings(ITypeResolver? resolver)
     {
         Output.Verbose("Trying to resolve command settings");
         
@@ -36,7 +36,7 @@ public static class ExceptionHandler
             var settings = resolver?.Resolve(typeof(LocalCommandSettings)) 
                            ?? resolver?.Resolve(typeof(GitCommandSettings));
             
-            return settings as ICommandSettings;
+            return settings as IAnalyzeCommandSettings;
         }
         catch (Exception exception)
         {

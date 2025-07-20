@@ -5,9 +5,16 @@ namespace Simple.ProjectAnalyzer.Domain.Utilities;
 
 public sealed class TypeRegistrar(IServiceCollection builder) : ITypeRegistrar
 {
+    private IServiceProvider? _serviceProvider;
+
     public ITypeResolver Build()
     {
-        return new TypeResolver(builder.BuildServiceProvider());
+        if (_serviceProvider == null)
+        {
+            _serviceProvider = builder.BuildServiceProvider();
+        }
+
+        return new TypeResolver(_serviceProvider);
     }
 
     public void Register(Type service, Type implementation)

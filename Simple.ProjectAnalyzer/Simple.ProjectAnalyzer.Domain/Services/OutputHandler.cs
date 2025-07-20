@@ -1,16 +1,17 @@
 using Simple.ProjectAnalyzer.Domain.Analysis;
+using Simple.ProjectAnalyzer.Domain.Analysis.Analyzers;
 using Simple.ProjectAnalyzer.Domain.CommandLine;
 using Simple.ProjectAnalyzer.Domain.Models;
 using Spectre.Console;
 
 namespace Simple.ProjectAnalyzer.Domain.Services;
 
-public class ResultOutputHandler
+public class OutputHandler
 {
-    public void ToConsole(Context context)
+    public void AnalysisResultToConsole(Context context)
     {
-        Output.Verbose($"{nameof(ResultOutputHandler)}.{nameof(ToConsole)} started");
-        
+        Output.Verbose($"{nameof(OutputHandler)}.{nameof(AnalysisResultToConsole)} started");
+
         foreach (var project in context.Projects.OrderBy(p => p.Name))
         {
             AnsiConsole.WriteLine();
@@ -19,17 +20,18 @@ public class ResultOutputHandler
                 .FirstOrDefault()?.Alias ?? "Unknown";
 
             //      PROJECT
-            
-            var projectRoot = new Tree(project.Name);
+
+            var projectRoot = new Tree("[aqua on black]" + project.Name + "[/]");
             if (project.Sdk is not null)
             {
                 projectRoot.AddNode("[dim]" + project.Sdk + "[/]");
             }
+
             projectRoot.AddNode("[dim]" + targetFrameworkAlias + "[/]");
             projectRoot.AddNode("[dim]" + project.Path + "[/]");
-            
 
-            var projectAnalysisRoot = new Tree("PROJECT ANALYSIS");
+
+            var projectAnalysisRoot = new Tree("[teal on black]PROJECT ANALYSIS[/]");
             foreach (var result in project.AnalysisResults)
             {
                 var color = GetColorForResultCode(result.Code);
@@ -39,10 +41,10 @@ public class ResultOutputHandler
             projectRoot.AddNode(projectAnalysisRoot);
 
             //      PACKAGE REFERENCES 
-            
+
             if (project.PackageReferences.Count > 0)
             {
-                var packageAnalysisRoot = new Tree("PACKAGE ANALYSIS");
+                var packageAnalysisRoot = new Tree("[teal on black]PACKAGE ANALYSIS[/]");
                 foreach (var pkg in project.PackageReferences)
                 {
                     var packageNode = packageAnalysisRoot.AddNode($"{pkg.Name} [dim]{pkg.Version}[/]");
@@ -56,12 +58,12 @@ public class ResultOutputHandler
 
                 projectRoot.AddNode(packageAnalysisRoot);
             }
-            
+
             //      REFERENCES 
 
             if (project.References.Count > 0)
             {
-                var referenceAnalysisRoot = new Tree("REFERENCE ANALYSIS");
+                var referenceAnalysisRoot = new Tree("[teal on black]REFERENCE ANALYSIS[/]");
                 foreach (var reference in project.References)
                 {
                     var packageNode = referenceAnalysisRoot.AddNode($"{reference.Name} [dim]{reference.HintPath}[/]");
@@ -75,23 +77,21 @@ public class ResultOutputHandler
 
                 projectRoot.AddNode(referenceAnalysisRoot);
             }
-            
+
             //      PROJECT REFERENCES 
-            
+
             if (project.ProjectReferences.Count > 0)
             {
-                var projectReferenceAnalysisRoot = new Tree("PROJECT REFERENCE ANALYSIS");
+                var projectReferenceAnalysisRoot = new Tree("[teal on black]PROJECT REFERENCE ANALYSIS[/]");
                 foreach (var projectReference in project.ProjectReferences)
                 {
                     projectReferenceAnalysisRoot.AddNode($"{Path.GetFileNameWithoutExtension(projectReference)} [dim]{projectReference}[/]");
-                    
                 }
 
                 projectRoot.AddNode(projectReferenceAnalysisRoot);
             }
-            
-            
-            
+
+
             AnsiConsole.Write(projectRoot);
 
             var errors = project.AnalysisResults.Count(r => r.Code == AnalysisResultCode.Error);
@@ -144,6 +144,35 @@ public class ResultOutputHandler
                 AnsiConsole.WriteLine($"- {result.Parent.Name}");
             }
         }
+    }
+
+    public void AnalyzersListToConsole(IEnumerable<IAnalyzer> analyzers)
+    {
+        AnsiConsole.WriteLine();
+      
+        var table = new Table();
+
+        table.ShowRowSeparators();
+        table.AddColumn("Name");
+        table.AddColumn("Result Codes");
+        table.AddColumn("Description");
+
+        foreach (var analyzer in analyzers)
+        {
+            table.AddRow(
+                analyzer.GetType().Name,
+                string.Join(", ", analyzer.ResultCodes.Select(code => $"[{GetColorForResultCode(code)}]{code}[/]")),
+                analyzer.Description
+            );
+        }
+        
+        AnsiConsole.Write(table);
+        
+        AnsiConsole.WriteLine();
+        AnsiConsole.MarkupLine("You can execute one or more specific analyzers when using the [purple on black]local[/] or [purple on black]git[/] commands.");
+        AnsiConsole.WriteLine("Example usage:");
+        AnsiConsole.MarkupLine("[purple on black]local --path /path/to/some/project-folder --analyzer <NAME> --analyzer <NAME> --analyzer <NAME>[/]");
+        AnsiConsole.WriteLine();
     }
 
     private static string GetColorForResultCode(AnalysisResultCode code) => code switch

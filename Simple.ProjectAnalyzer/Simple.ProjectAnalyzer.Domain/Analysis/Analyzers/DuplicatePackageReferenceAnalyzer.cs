@@ -5,6 +5,14 @@ namespace Simple.ProjectAnalyzer.Domain.Analysis.Analyzers;
 
 public class DuplicatePackageReferenceAnalyzer : IAnalyzer
 {
+    public string Description => "Analyzes project files to detect duplicate NuGet package references. " +
+                                 "Duplicate references, especially with conflicting versions, can cause build warnings, " +
+                                 "dependency resolution issues, and increased maintenance complexity. " +
+                                 "This analyzer helps ensure that each package is referenced only once per project " +
+                                 "to maintain clean and consistent dependency management.";
+
+    public IEnumerable<AnalysisResultCode> ResultCodes => [AnalysisResultCode.Warning, AnalysisResultCode.Ok];
+
     public Task Run(Context context)
     {
         Output.Verbose($"{nameof(DuplicatePackageReferenceAnalyzer)}.{nameof(Run)} started");

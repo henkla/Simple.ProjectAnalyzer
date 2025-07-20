@@ -5,6 +5,14 @@ namespace Simple.ProjectAnalyzer.Domain.Analysis.Analyzers;
 
 public class ExternalDllAnalyzer : IAnalyzer
 {
+    public string Description =>  "Scans project files to identify direct external DLL references. " +
+                                  "Such references rely on fixed file paths and versions, which can lead to fragile builds, " +
+                                  "version conflicts, and difficulties in dependency management across environments. " +
+                                  "This analyzer highlights projects that use direct DLL references and encourages " +
+                                  "replacing them with NuGet packages or project references to improve build reliability, " +
+                                  "versioning consistency, and maintainability.";
+    
+    public IEnumerable<AnalysisResultCode> ResultCodes => [AnalysisResultCode.Hint, AnalysisResultCode.Ok];
     public Task Run(Context context)
     {
         Output.Verbose($"{nameof(ExternalDllAnalyzer)}.{nameof(Run)} started");

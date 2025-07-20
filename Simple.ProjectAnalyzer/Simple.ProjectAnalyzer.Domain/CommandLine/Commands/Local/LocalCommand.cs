@@ -18,7 +18,7 @@ public class LocalCommand(LocalCommandHandler localCommandHandler) : AsyncComman
         {
             Output.EnableVerboseOutput();
         }
-
+        
         var context = await localCommandHandler.HandleCommand(commandSettings);
 
         return (int)context.ApplicationExitCode;

@@ -8,14 +8,15 @@ public class LocalCommandHandler(
     ProjectParser projectParser,
     DotnetService dotnetService,
     Orchestrator orchestrator,
-    ResultOutputHandler resultOutputHandler
-    ) : ICommandHandler
+    OutputHandler outputHandler
+    ) : IAnalyzeCommandHandler
 {
-    public async Task<Context> HandleCommand(ICommandSettings commandSettings)
+    public async Task<Context> HandleCommand(IAnalyzeCommandSettings analyzeCommandSettings)
     {
+        Output.Figlet("Analyzing local");
         Output.Verbose($"{nameof(LocalCommandHandler)}.{nameof(HandleCommand)} started");
         
-        var projectFiles = projectFinder.FindProjectFiles(commandSettings.Path);
+        var projectFiles = projectFinder.FindProjectFiles(analyzeCommandSettings.Path);
         var projects = projectParser.ParseProjectFiles(projectFiles);
         if (projects.Any(p => p.TargetFrameworks.Count == 0))
         {
@@ -26,12 +27,16 @@ public class LocalCommandHandler(
         var context = new Context
         {
             Projects = projects,
-            CommandSettings = commandSettings,
+            AnalyzeCommandSettings = analyzeCommandSettings,
             CurrentLtsVersion = currentLtsVersion
         };
         
         await orchestrator.AnalyzeProjects(context);
-        resultOutputHandler.ToConsole(context);
+        
+        if (context.AnalysisHasRun)
+        {
+            outputHandler.AnalysisResultToConsole(context);
+        }
 
         return context;
     }

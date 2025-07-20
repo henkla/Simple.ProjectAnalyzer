@@ -56,5 +56,11 @@ public static class Output
         AnsiConsole.WriteException(exception, format.Value);
     }
 
-    
+
+    public static void Figlet(string text, Color? color = null)
+    {
+        AnsiConsole.Write(new FigletText(text)
+            .LeftJustified()
+            .Color(color ?? Color.Default));
+    }
 }
