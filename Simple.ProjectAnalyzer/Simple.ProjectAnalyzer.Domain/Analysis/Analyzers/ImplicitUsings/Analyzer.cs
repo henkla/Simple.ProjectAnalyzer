@@ -1,27 +1,9 @@
 using Simple.ProjectAnalyzer.Domain.Models;
 
-namespace Simple.ProjectAnalyzer.Domain.Analysis.Analyzers;
+namespace Simple.ProjectAnalyzer.Domain.Analysis.Analyzers.ImplicitUsings;
 
-public class ImplicitUsingsAnalyzer : IAnalyzer
+public partial class Analyzer : IAnalyzer
 {
-    public string Description => "Analyzes project files to determine whether <ImplicitUsings> is explicitly defined. " +
-                                 "Implicit usings provide a set of default using directives depending on the target framework, " +
-                                 "which can simplify code but may also introduce hidden dependencies. " +
-                                 "This analyzer helps ensure that the implicit using behavior is intentional and clearly declared " +
-                                 "in the project file, improving project clarity and reducing ambiguity.";
-
-    public IEnumerable<AnalysisResultCode> Codes =>
-    [
-        AnalysisResultCode.Ok,
-        AnalysisResultCode.Hint,
-        AnalysisResultCode.Warning
-    ];
-
-    public IEnumerable<AnalysisResultType> Targets =>
-    [
-        AnalysisResultType.Project
-    ];
-
     public Task Run(Context context)
     {
 
@@ -34,8 +16,8 @@ public class ImplicitUsingsAnalyzer : IAnalyzer
                     Code = AnalysisResultCode.Hint,
                     Parent = project,
                     Type = AnalysisResultType.Project,
-                    Source = nameof(ImplicitUsingsAnalyzer),
-                    Title = "ImplicitUsings not defined",
+                    Source = Name,
+                    Title = "Declaration on <ImplicitUsings>",
                     Message = "Project does not explicitly define <ImplicitUsings>.",
                     Details = "Consider adding <ImplicitUsings> to make the configuration more explicit and consistent across projects."
                 });
@@ -47,8 +29,8 @@ public class ImplicitUsingsAnalyzer : IAnalyzer
                     Code = AnalysisResultCode.Warning,
                     Parent = project,
                     Type = AnalysisResultType.Project,
-                    Source = nameof(ImplicitUsingsAnalyzer),
-                    Title = "ImplicitUsings is disabled",
+                    Source = Name,
+                    Title = "Declaration on <ImplicitUsings>",
                     Message = "Project has <ImplicitUsings> set to false.",
                     Details = "Disabling implicit usings might lead to more verbose code. Ensure this is intentional and consistent with the team's conventions."
                 });
@@ -60,8 +42,8 @@ public class ImplicitUsingsAnalyzer : IAnalyzer
                     Code = AnalysisResultCode.Ok,
                     Parent = project,
                     Type = AnalysisResultType.Project,
-                    Source = nameof(ImplicitUsingsAnalyzer),
-                    Title = "ImplicitUsings is enabled",
+                    Source = Name,
+                    Title = "<ImplicitUsings>",
                     Message = $"Project '{project.Name}' has <ImplicitUsings> enabled.",
                     Details = "No action needed."
                 });

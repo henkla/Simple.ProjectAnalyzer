@@ -2,31 +2,15 @@ using System.Text.RegularExpressions;
 using Simple.ProjectAnalyzer.Domain.CommandLine;
 using Simple.ProjectAnalyzer.Domain.Models;
 
-namespace Simple.ProjectAnalyzer.Domain.Analysis.Analyzers;
+namespace Simple.ProjectAnalyzer.Domain.Analysis.Analyzers.PreReleasePackageReference;
 
-public class PreReleasePackageReferenceAnalyzer : IAnalyzer
+public partial class Analyzer : IAnalyzer
 {
-    public string Description => "Analyzes project files to detect NuGet package references that use " +
-                                 "pre-release versions. Pre-release packages may contain unfinished features, " +
-                                 "breaking changes, or unstable code, which can introduce risks in production " +
-                                 "environments. This analyzer helps identify such packages so teams can evaluate " +
-                                 "whether to replace them with stable releases for improved reliability and support.";
-    
-    public IEnumerable<AnalysisResultCode> Codes => [
-        AnalysisResultCode.Hint, 
-        AnalysisResultCode.Ok
-    ];
-    
-    public IEnumerable<AnalysisResultType> Targets => [
-        AnalysisResultType.Project, 
-        AnalysisResultType.PackageReference
-    ];
-    
     private static readonly Regex PreReleaseRegex = new(@"-\w+", RegexOptions.Compiled);
 
     public Task Run(Context context)
     {
-        Output.Verbose($"{nameof(PreReleasePackageReferenceAnalyzer)}.{nameof(Run)} started");
+        Output.Verbose($"{nameof(Analyzer)}.{nameof(Run)} started");
         
         foreach (var project in context.Projects)
         {
@@ -45,7 +29,7 @@ public class PreReleasePackageReferenceAnalyzer : IAnalyzer
                     Code = AnalysisResultCode.Ok,
                     Type = AnalysisResultType.Project,
                     Parent = project,
-                    Source = nameof(PreReleasePackageReferenceAnalyzer)
+                    Source = Name,
                 });
 
                 continue;
@@ -68,7 +52,7 @@ public class PreReleasePackageReferenceAnalyzer : IAnalyzer
                     Code = AnalysisResultCode.Hint,
                     Type = AnalysisResultType.Project,
                     Parent = project,
-                    Source = nameof(PreReleasePackageReferenceAnalyzer)
+                    Source = Name,
                 });
             }
             else
@@ -84,7 +68,7 @@ public class PreReleasePackageReferenceAnalyzer : IAnalyzer
                     Code = AnalysisResultCode.Ok,
                     Type = AnalysisResultType.Project,
                     Parent = project,
-                    Source = nameof(PreReleasePackageReferenceAnalyzer)
+                    Source = Name,
                 });
             }
 
@@ -101,7 +85,7 @@ public class PreReleasePackageReferenceAnalyzer : IAnalyzer
                     Code = AnalysisResultCode.Hint,
                     Type = AnalysisResultType.PackageReference,
                     Parent = preReleasePackage,
-                    Source = nameof(PreReleasePackageReferenceAnalyzer)
+                    Source = Name,
                 });
             }
         }

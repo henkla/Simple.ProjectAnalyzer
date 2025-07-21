@@ -1,29 +1,14 @@
 using Simple.ProjectAnalyzer.Domain.CommandLine;
 using Simple.ProjectAnalyzer.Domain.Models;
 
-namespace Simple.ProjectAnalyzer.Domain.Analysis.Analyzers;
+namespace Simple.ProjectAnalyzer.Domain.Analysis.Analyzers.ExternalDllReference;
 
-public class ExternalDllAnalyzer : IAnalyzer
+public partial class Analyzer : IAnalyzer
 {
-    public string Description =>  "Scans project files to identify direct external DLL references. " +
-                                  "Such references rely on fixed file paths and versions, which can lead to fragile builds, " +
-                                  "version conflicts, and difficulties in dependency management across environments. " +
-                                  "This analyzer highlights projects that use direct DLL references and encourages " +
-                                  "replacing them with NuGet packages or project references to improve build reliability, " +
-                                  "versioning consistency, and maintainability.";
     
-    public IEnumerable<AnalysisResultCode> Codes => [
-        AnalysisResultCode.Hint, 
-        AnalysisResultCode.Ok
-    ];
-    
-    public IEnumerable<AnalysisResultType> Targets => [
-        AnalysisResultType.Project, 
-        AnalysisResultType.ExternalReference
-    ];
     public Task Run(Context context)
     {
-        Output.Verbose($"{nameof(ExternalDllAnalyzer)}.{nameof(Run)} started");
+        Output.Verbose($"{nameof(Analyzer)}.{nameof(Run)} started");
         
         foreach (var project in context.Projects)
         {
@@ -33,7 +18,7 @@ public class ExternalDllAnalyzer : IAnalyzer
             {
                 project.AnalysisResults.Add(new AnalysisResult
                 {
-                    Source = nameof(ExternalDllAnalyzer),
+                    Source = Name,
                     Type = AnalysisResultType.Project,
                     Title = "External DLL reference(s)",
                     Message = "Direct DLL references detected in the project.",
@@ -50,7 +35,7 @@ public class ExternalDllAnalyzer : IAnalyzer
                 {
                     reference.AnalysisResults.Add(new AnalysisResult
                     {
-                        Source = nameof(ExternalDllAnalyzer),
+                        Source = Name,
                         Title = "External DLL reference",
                         Type = AnalysisResultType.Project,
                         Message = "This is a direct DLL reference.",
@@ -68,7 +53,7 @@ public class ExternalDllAnalyzer : IAnalyzer
             {
                 project.AnalysisResults.Add(new AnalysisResult
                 {
-                    Source = nameof(ExternalDllAnalyzer),
+                    Source = Name,
                     Title = "No external DLL references",
                     Type = AnalysisResultType.Project,
                     Message = "Project has no direct DLL references.",

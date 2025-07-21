@@ -1,29 +1,15 @@
 using Simple.ProjectAnalyzer.Domain.CommandLine;
 using Simple.ProjectAnalyzer.Domain.Models;
 
-namespace Simple.ProjectAnalyzer.Domain.Analysis.Analyzers;
+namespace Simple.ProjectAnalyzer.Domain.Analysis.Analyzers.OutdatedFramework;
 
-public class OutdatedFrameworkAnalyzer : IAnalyzer
+public partial class Analyzer : IAnalyzer
 {
-    public string Description => "Analyzes project files to detect whether target frameworks are outdated " +
-                                 "in relation to the current .NET Long-Term Support (LTS) version. Projects " +
-                                 "targeting frameworks older than the current LTS may miss out on critical " +
-                                 "security updates, performance improvements, and modern features. This analyzer " +
-                                 "highlights such projects and recommends upgrading to the current LTS to ensure " +
-                                 "long-term stability and support.";
     
-    public IEnumerable<AnalysisResultCode> Codes => [
-        AnalysisResultCode.Warning, 
-        AnalysisResultCode.Ok
-    ];
-    
-    public IEnumerable<AnalysisResultType> Targets => [
-        AnalysisResultType.Project
-    ];
     
     public Task Run(Context context)
     {
-        Output.Verbose($"{nameof(OutdatedFrameworkAnalyzer)}.{nameof(Run)} started");
+        Output.Verbose($"{nameof(Analyzer)}.{nameof(Run)} started");
         
         var sdkProjects = context.Projects
             .Where(p => p.TargetFrameworks.Any(tf => tf.Version.Major >= 5))
@@ -38,7 +24,7 @@ public class OutdatedFrameworkAnalyzer : IAnalyzer
         return Task.CompletedTask;
     }
 
-    private static AnalysisResult CompareProjectVersionToCurrentLts(Project sdkProject, TargetFramework currentLtsVersion)
+    private AnalysisResult CompareProjectVersionToCurrentLts(Project sdkProject, TargetFramework currentLtsVersion)
     {
         var currentLtsVersionAlias = currentLtsVersion.Alias;
         var highestTargetFramework = GetHighestTargetFramework(sdkProject.TargetFrameworks);
@@ -47,7 +33,7 @@ public class OutdatedFrameworkAnalyzer : IAnalyzer
         {
             > 0 => new AnalysisResult // ahead of LTS
             {
-                Source = nameof(OutdatedFrameworkAnalyzer),
+                Source = Name,
                 Code = AnalysisResultCode.Ok,
                 Parent = sdkProject,
                 Type = AnalysisResultType.Project,
@@ -60,7 +46,7 @@ public class OutdatedFrameworkAnalyzer : IAnalyzer
             },
             < 0 => new AnalysisResult // behind LTS
             {
-                Source = nameof(OutdatedFrameworkAnalyzer),
+                Source = Name,
                 Code = AnalysisResultCode.Warning,
                 Parent = sdkProject,
                 Type = AnalysisResultType.Project,
@@ -74,7 +60,7 @@ public class OutdatedFrameworkAnalyzer : IAnalyzer
             },
             _ => new AnalysisResult // equal to current LTS
             {
-                Source = nameof(OutdatedFrameworkAnalyzer),
+                Source = Name,
                 Code = AnalysisResultCode.Ok,
                 Parent = sdkProject,
                 Type = AnalysisResultType.Project,

@@ -158,10 +158,10 @@ public class OutputHandler
         table.AddColumn("Result Codes");
         table.AddColumn("Description");
 
-        foreach (var analyzer in analyzers)
+        foreach (var analyzer in analyzers.OrderBy(a => a.Name))
         {
             table.AddRow(
-                analyzer.GetType().Name,
+                analyzer.Name,
                 string.Join(", ", analyzer.Targets), 
                 string.Join(", ", analyzer.Codes.Select(code => $"[{GetColorForResultCode(code)}]{code}[/]")),
                 analyzer.Description

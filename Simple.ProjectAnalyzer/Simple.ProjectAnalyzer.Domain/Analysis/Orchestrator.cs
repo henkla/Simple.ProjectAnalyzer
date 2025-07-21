@@ -10,6 +10,7 @@ public class Orchestrator(IEnumerable<IAnalyzer> analyzers)
         Output.Verbose($"{nameof(Orchestrator)}.{nameof(AnalyzeProjects)} started");
 
         var tasks = GetFilteredAnalyzers(context)
+            .OrderBy(a => a.Name)
             .Select(a => a.Run(context));
 
         await Task.WhenAll(tasks);
@@ -27,14 +28,14 @@ public class Orchestrator(IEnumerable<IAnalyzer> analyzers)
         }
 
         var filtered = analyzers
-            .Where(a => selectedAnalyzers.Contains(a.GetType().Name.ToLowerInvariant()))
+            .Where(a => selectedAnalyzers.Contains(a.Name.ToLowerInvariant()))
             .DistinctBy(a => a.GetType())
             .ToList();
 
         if (filtered.Count == 0)
         {
             Output.Error("None of the specified analyzers matched any available analyzers.");
-            Output.Line("Run command: 'analyzers' to see all available analyzers.");
+            Output.Line("Run command: [purple on black]analyzers --list[/] to see all available analyzers.");
         }
         else
         {

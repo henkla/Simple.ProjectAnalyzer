@@ -1,29 +1,13 @@
 using Simple.ProjectAnalyzer.Domain.CommandLine;
 using Simple.ProjectAnalyzer.Domain.Models;
 
-namespace Simple.ProjectAnalyzer.Domain.Analysis.Analyzers;
+namespace Simple.ProjectAnalyzer.Domain.Analysis.Analyzers.LegacyProject;
 
-public class LegacyProjectAnalyzer : IAnalyzer
+public partial class Analyzer : IAnalyzer
 {
-    public string Description =>  "Analyzes projects to identify usage of legacy, non-SDK style project formats " +
-                                  "and outdated target frameworks. Legacy projects often lack modern build features, " +
-                                  "improved maintainability, and compatibility with current tooling. This analyzer " +
-                                  "highlights projects that should consider migrating to the SDK-style format and " +
-                                  "updating their target frameworks to supported .NET versions (>= .NET 5) to ensure " +
-                                  "better maintainability, security, and support.";
-    
-    public IEnumerable<AnalysisResultCode> Codes => [
-        AnalysisResultCode.Warning, 
-        AnalysisResultCode.Ok
-    ];
-    
-    public IEnumerable<AnalysisResultType> Targets => [
-        AnalysisResultType.Project, 
-    ];
-    
     public Task Run(Context context)
     {
-        Output.Verbose($"{nameof(LegacyProjectAnalyzer)}.{nameof(Run)} started");
+        Output.Verbose($"{nameof(Analyzer)}.{nameof(Run)} started");
         
         var currentLtsVersion = context.CurrentLtsVersion.Alias;
         
@@ -32,7 +16,7 @@ public class LegacyProjectAnalyzer : IAnalyzer
             .ToList()
             .ForEach(legacySdkProject => legacySdkProject.AnalysisResults.Add(new AnalysisResult
             {
-                Source = nameof(LegacyProjectAnalyzer),
+                Source = Name,
                 Code = AnalysisResultCode.Warning,
                 Parent = legacySdkProject,
                 Type = AnalysisResultType.Project,
@@ -49,7 +33,7 @@ public class LegacyProjectAnalyzer : IAnalyzer
             .ToList()
             .ForEach(legacyProject => legacyProject.AnalysisResults.Add(new AnalysisResult
             {
-                Source = nameof(LegacyProjectAnalyzer),
+                Source = Name,
                 Code = AnalysisResultCode.Warning,
                 Parent = legacyProject,
                 Type = AnalysisResultType.Project,
@@ -65,7 +49,7 @@ public class LegacyProjectAnalyzer : IAnalyzer
             .ToList()
             .ForEach(project => project.AnalysisResults.Add(new AnalysisResult
             {
-                Source = nameof(LegacyProjectAnalyzer),
+                Source = Name,
                 Code = AnalysisResultCode.Ok,
                 Parent = project,
                 Type = AnalysisResultType.Project,
