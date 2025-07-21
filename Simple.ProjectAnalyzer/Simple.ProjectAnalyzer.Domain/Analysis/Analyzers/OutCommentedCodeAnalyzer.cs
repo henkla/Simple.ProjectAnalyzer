@@ -12,7 +12,14 @@ public partial class OutCommentedCodeAnalyzer : IAnalyzer
                                   "during maintenance. This analyzer helps identify and clean up obsolete or " +
                                   "unnecessary commented-out code to promote cleaner and more maintainable project files.";
     
-    public IEnumerable<AnalysisResultCode> ResultCodes => [AnalysisResultCode.Hint, AnalysisResultCode.Ok];
+    public IEnumerable<AnalysisResultCode> Codes => [
+        AnalysisResultCode.Hint, 
+        AnalysisResultCode.Ok
+    ];
+    
+    public IEnumerable<AnalysisResultType> Targets => [
+        AnalysisResultType.Project
+    ];
     
     [GeneratedRegex(@"<!--\s*<[^>]+>.*?-->", RegexOptions.Singleline)]
     private static partial Regex OutCommentedCodeRegex();
@@ -30,6 +37,7 @@ public partial class OutCommentedCodeAnalyzer : IAnalyzer
                 {
                     Code = AnalysisResultCode.Hint,
                     Parent = project,
+                    Type = AnalysisResultType.Project,
                     Source = nameof(OutCommentedCodeAnalyzer),
                     Title = "Commented-out code in project file",
                     Message = "Commented-out XML elements detected in the project file.",
@@ -43,6 +51,7 @@ public partial class OutCommentedCodeAnalyzer : IAnalyzer
                 {
                     Code = AnalysisResultCode.Ok,
                     Parent = project,
+                    Type = AnalysisResultType.Project,
                     Source = nameof(OutCommentedCodeAnalyzer),
                     Title = "Commented-out code in project file",
                     Message = "No commented-out code found in the project file.",

@@ -154,6 +154,7 @@ public class OutputHandler
 
         table.ShowRowSeparators();
         table.AddColumn("Name");
+        table.AddColumn("Targets");
         table.AddColumn("Result Codes");
         table.AddColumn("Description");
 
@@ -161,7 +162,8 @@ public class OutputHandler
         {
             table.AddRow(
                 analyzer.GetType().Name,
-                string.Join(", ", analyzer.ResultCodes.Select(code => $"[{GetColorForResultCode(code)}]{code}[/]")),
+                string.Join(", ", analyzer.Targets), 
+                string.Join(", ", analyzer.Codes.Select(code => $"[{GetColorForResultCode(code)}]{code}[/]")),
                 analyzer.Description
             );
         }

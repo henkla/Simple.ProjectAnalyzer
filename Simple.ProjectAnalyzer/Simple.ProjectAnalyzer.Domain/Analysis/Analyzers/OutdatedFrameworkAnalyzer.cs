@@ -12,7 +12,14 @@ public class OutdatedFrameworkAnalyzer : IAnalyzer
                                  "highlights such projects and recommends upgrading to the current LTS to ensure " +
                                  "long-term stability and support.";
     
-    public IEnumerable<AnalysisResultCode> ResultCodes => [AnalysisResultCode.Warning, AnalysisResultCode.Ok];
+    public IEnumerable<AnalysisResultCode> Codes => [
+        AnalysisResultCode.Warning, 
+        AnalysisResultCode.Ok
+    ];
+    
+    public IEnumerable<AnalysisResultType> Targets => [
+        AnalysisResultType.Project
+    ];
     
     public Task Run(Context context)
     {
@@ -43,6 +50,7 @@ public class OutdatedFrameworkAnalyzer : IAnalyzer
                 Source = nameof(OutdatedFrameworkAnalyzer),
                 Code = AnalysisResultCode.Ok,
                 Parent = sdkProject,
+                Type = AnalysisResultType.Project,
                 Title = "TargetFramework is ahead of LTS",
                 Message = "The project targets a framework version that is newer than the current LTS.",
                 Details = "Using a newer framework version may give you access to the latest features " +
@@ -55,6 +63,7 @@ public class OutdatedFrameworkAnalyzer : IAnalyzer
                 Source = nameof(OutdatedFrameworkAnalyzer),
                 Code = AnalysisResultCode.Warning,
                 Parent = sdkProject,
+                Type = AnalysisResultType.Project,
                 Title = "Target Framework is behind LTS",
                 Message = "The project targets a framework version that is older than the current LTS.",
                 Details = "Using a framework older than the current Long-Term Support (LTS) version may " +
@@ -68,6 +77,7 @@ public class OutdatedFrameworkAnalyzer : IAnalyzer
                 Source = nameof(OutdatedFrameworkAnalyzer),
                 Code = AnalysisResultCode.Ok,
                 Parent = sdkProject,
+                Type = AnalysisResultType.Project,
                 Title = "Target Framework is current LTS",
                 Message = "The project targets the current LTS framework version.",
                 Details = "Targeting the current Long-Term Support (LTS) version ensures maximum stability, " +

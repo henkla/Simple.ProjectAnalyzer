@@ -5,8 +5,10 @@ public class Project : IAnalyzable
     public required string Name { get; init; }
     public required string Path { get; init; }
     public string? Sdk { get; init; }
+    public string? LangVersion { get; set; }
     public required bool IsLegacy { get; init; }
     public bool? NullableEnabled { get; init; }
+    public bool? ImplicitUsingsEnabled { get; init; }
     public List<TargetFramework> TargetFrameworks { get; init; } = [];
     public List<string> ProjectReferences { get; init; } = [];
     public List<Reference> References { get; init; } = [];

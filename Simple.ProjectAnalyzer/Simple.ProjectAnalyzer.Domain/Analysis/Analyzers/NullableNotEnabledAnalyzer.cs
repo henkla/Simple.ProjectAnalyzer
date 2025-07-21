@@ -11,10 +11,14 @@ public class NullableNotEnabledAnalyzer : IAnalyzer
                                  "caught at compile time. This analyzer encourages enabling nullable reference types " +
                                  "to improve code safety, clarity, and consistency across the codebase.";
     
-    public IEnumerable<AnalysisResultCode> ResultCodes => [
+    public IEnumerable<AnalysisResultCode> Codes => [
         AnalysisResultCode.Hint, 
         AnalysisResultCode.Warning, 
         AnalysisResultCode.Ok
+    ];
+
+    public IEnumerable<AnalysisResultType> Targets => [
+        AnalysisResultType.Project
     ];
     
     public Task Run(Context context)
@@ -31,6 +35,7 @@ public class NullableNotEnabledAnalyzer : IAnalyzer
                         Source = nameof(NullableNotEnabledAnalyzer),
                         Parent = project,
                         Code = AnalysisResultCode.Hint,
+                        Type = AnalysisResultType.Project,
                         Title = "Nullable reference types unset",
                         Message = "Nullable context is not explicitly defined.",
                         Details = "The <Nullable> setting is missing from the project file. This means " +
@@ -49,6 +54,7 @@ public class NullableNotEnabledAnalyzer : IAnalyzer
                         Source = nameof(NullableNotEnabledAnalyzer),
                         Parent = project,
                         Code = AnalysisResultCode.Warning,
+                        Type = AnalysisResultType.Project,
                         Title = "Nullable reference types disabled",
                         Message = "Nullable reference types are explicitly disabled.",
                         Details = "The <Nullable> setting in the project file is set to 'disable', which " +
@@ -65,6 +71,7 @@ public class NullableNotEnabledAnalyzer : IAnalyzer
                         Source = nameof(NullableNotEnabledAnalyzer),
                         Parent = project,
                         Code = AnalysisResultCode.Ok,
+                        Type = AnalysisResultType.Project,
                         Title = "Nullable reference types enabled",
                         Message = "Nullable reference types are enabled.",
                         Details = "The project has <Nullable>enable</Nullable>, which enforces nullability checks during compilation."

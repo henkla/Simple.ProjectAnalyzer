@@ -12,7 +12,15 @@ public class PreReleasePackageReferenceAnalyzer : IAnalyzer
                                  "environments. This analyzer helps identify such packages so teams can evaluate " +
                                  "whether to replace them with stable releases for improved reliability and support.";
     
-    public IEnumerable<AnalysisResultCode> ResultCodes => [AnalysisResultCode.Hint, AnalysisResultCode.Ok];
+    public IEnumerable<AnalysisResultCode> Codes => [
+        AnalysisResultCode.Hint, 
+        AnalysisResultCode.Ok
+    ];
+    
+    public IEnumerable<AnalysisResultType> Targets => [
+        AnalysisResultType.Project, 
+        AnalysisResultType.PackageReference
+    ];
     
     private static readonly Regex PreReleaseRegex = new(@"-\w+", RegexOptions.Compiled);
 
@@ -35,6 +43,7 @@ public class PreReleasePackageReferenceAnalyzer : IAnalyzer
                               "package references to leverage shared functionality, security updates, " +
                               "and ongoing improvements from third-party libraries.",
                     Code = AnalysisResultCode.Ok,
+                    Type = AnalysisResultType.Project,
                     Parent = project,
                     Source = nameof(PreReleasePackageReferenceAnalyzer)
                 });
@@ -57,6 +66,7 @@ public class PreReleasePackageReferenceAnalyzer : IAnalyzer
                               $"the risks and accept the maintenance overhead.",
                     Recommendation = "Use stable versions if possible.",
                     Code = AnalysisResultCode.Hint,
+                    Type = AnalysisResultType.Project,
                     Parent = project,
                     Source = nameof(PreReleasePackageReferenceAnalyzer)
                 });
@@ -72,6 +82,7 @@ public class PreReleasePackageReferenceAnalyzer : IAnalyzer
                               "Using stable versions in production environments helps ensure security, performance, and maintainability. " +
                               "Keep dependencies updated to benefit from the latest fixes and improvements.",
                     Code = AnalysisResultCode.Ok,
+                    Type = AnalysisResultType.Project,
                     Parent = project,
                     Source = nameof(PreReleasePackageReferenceAnalyzer)
                 });
@@ -88,6 +99,7 @@ public class PreReleasePackageReferenceAnalyzer : IAnalyzer
                               "to switch to a stable release for improved reliability, compatibility, and long-term " +
                               "support.",
                     Code = AnalysisResultCode.Hint,
+                    Type = AnalysisResultType.PackageReference,
                     Parent = preReleasePackage,
                     Source = nameof(PreReleasePackageReferenceAnalyzer)
                 });

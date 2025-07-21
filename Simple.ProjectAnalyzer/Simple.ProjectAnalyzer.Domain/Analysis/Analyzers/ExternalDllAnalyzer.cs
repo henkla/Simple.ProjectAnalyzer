@@ -12,7 +12,15 @@ public class ExternalDllAnalyzer : IAnalyzer
                                   "replacing them with NuGet packages or project references to improve build reliability, " +
                                   "versioning consistency, and maintainability.";
     
-    public IEnumerable<AnalysisResultCode> ResultCodes => [AnalysisResultCode.Hint, AnalysisResultCode.Ok];
+    public IEnumerable<AnalysisResultCode> Codes => [
+        AnalysisResultCode.Hint, 
+        AnalysisResultCode.Ok
+    ];
+    
+    public IEnumerable<AnalysisResultType> Targets => [
+        AnalysisResultType.Project, 
+        AnalysisResultType.ExternalReference
+    ];
     public Task Run(Context context)
     {
         Output.Verbose($"{nameof(ExternalDllAnalyzer)}.{nameof(Run)} started");
@@ -26,6 +34,7 @@ public class ExternalDllAnalyzer : IAnalyzer
                 project.AnalysisResults.Add(new AnalysisResult
                 {
                     Source = nameof(ExternalDllAnalyzer),
+                    Type = AnalysisResultType.Project,
                     Title = "External DLL reference(s)",
                     Message = "Direct DLL references detected in the project.",
                     Details = "This approach is considered fragile because it tightly couples the build to specific file paths and versions. " +
@@ -43,6 +52,7 @@ public class ExternalDllAnalyzer : IAnalyzer
                     {
                         Source = nameof(ExternalDllAnalyzer),
                         Title = "External DLL reference",
+                        Type = AnalysisResultType.Project,
                         Message = "This is a direct DLL reference.",
                         Details = "This approach is considered fragile because it tightly couples the build to specific file paths and versions. " +
                                   "It can lead to versioning issues, broken builds across different machines, and increased maintenance complexity. " +
@@ -60,6 +70,7 @@ public class ExternalDllAnalyzer : IAnalyzer
                 {
                     Source = nameof(ExternalDllAnalyzer),
                     Title = "No external DLL references",
+                    Type = AnalysisResultType.Project,
                     Message = "Project has no direct DLL references.",
                     Details = "No 'HintPath'-based direct DLL references were detected. This is the recommended approach.",
                     Code = AnalysisResultCode.Ok,

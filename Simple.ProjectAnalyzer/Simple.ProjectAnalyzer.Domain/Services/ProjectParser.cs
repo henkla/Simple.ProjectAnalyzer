@@ -27,7 +27,9 @@ namespace Simple.ProjectAnalyzer.Domain.Services
 
             var name = Path.GetFileNameWithoutExtension(projectFile);
             var sdk = ParseSdk(xDocument);
+            var langVersion = ParseLangVersion(xDocument, xNamespace);
             var nullableEnabled = ParseNullableProperty(xDocument, xNamespace);
+            var implicitUsingsEnabled = ParseImplicitUsings(xDocument, xNamespace);
             var packageReferences = ParsePackageReferences(xDocument, xNamespace);
             var projectReferences = ParseProjectReferences(xDocument, xNamespace);
             var references = ParseReferences(xDocument, xNamespace);
@@ -38,13 +40,20 @@ namespace Simple.ProjectAnalyzer.Domain.Services
                 Name = name,
                 Path = projectFile,
                 Sdk = sdk,
+                LangVersion = langVersion,
                 NullableEnabled = nullableEnabled,
+                ImplicitUsingsEnabled = implicitUsingsEnabled,
                 IsLegacy = projectFileIsOfLegacyType,
                 PackageReferences = packageReferences,
                 ProjectReferences = projectReferences,
                 References = references,
                 TargetFrameworks = targetFrameworks
             };
+        }
+        
+        public List<Project> ParseProjectFiles(List<string> projectFiles)
+        {
+            return projectFiles.Select(ParseProjectFile).ToList();
         }
 
         private static bool? ParseNullableProperty(XDocument xDocument, XNamespace xNamespace)
@@ -171,11 +180,6 @@ namespace Simple.ProjectAnalyzer.Domain.Services
                 .ToList();
         }
 
-        public List<Project> ParseProjectFiles(List<string> projectFiles)
-        {
-            return projectFiles.Select(ParseProjectFile).ToList();
-        }
-
         private TargetFramework ParseTargetFramework(string targetFrameworkRaw)
         {
             var version = ParseVersionFromTargetFramework(targetFrameworkRaw);
@@ -299,6 +303,26 @@ namespace Simple.ProjectAnalyzer.Domain.Services
 
             Output.Error("Unable to parse version from TargetFramework");
             return new Version(0, 0);
+        }
+        
+        private static string? ParseLangVersion(XDocument xDocument, XNamespace xNamespace)
+        {
+            var langVersionElement = xDocument
+                .Descendants(xNamespace + "LangVersion")
+                .FirstOrDefault();
+
+            return langVersionElement?.Value.Trim();
+        }
+        
+        private static bool? ParseImplicitUsings(XDocument xDocument, XNamespace xNamespace)
+        {
+            var implicitUsingsElement = xDocument
+                .Descendants(xNamespace + "ImplicitUsings")
+                .FirstOrDefault();
+
+            return implicitUsingsElement != null
+                ? string.Equals(implicitUsingsElement.Value.Trim(), "enable", StringComparison.OrdinalIgnoreCase)
+                : null;
         }
     }
 }

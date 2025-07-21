@@ -12,7 +12,14 @@ public class LegacyProjectAnalyzer : IAnalyzer
                                   "updating their target frameworks to supported .NET versions (>= .NET 5) to ensure " +
                                   "better maintainability, security, and support.";
     
-    public IEnumerable<AnalysisResultCode> ResultCodes => [AnalysisResultCode.Warning, AnalysisResultCode.Ok];
+    public IEnumerable<AnalysisResultCode> Codes => [
+        AnalysisResultCode.Warning, 
+        AnalysisResultCode.Ok
+    ];
+    
+    public IEnumerable<AnalysisResultType> Targets => [
+        AnalysisResultType.Project, 
+    ];
     
     public Task Run(Context context)
     {
@@ -28,6 +35,7 @@ public class LegacyProjectAnalyzer : IAnalyzer
                 Source = nameof(LegacyProjectAnalyzer),
                 Code = AnalysisResultCode.Warning,
                 Parent = legacySdkProject,
+                Type = AnalysisResultType.Project,
                 Title = "Legacy non-SDK style",
                 Message = "Project is a legacy non-SDK style project.",
                 Details = "This project does not use the newer SDK-style project format introduced with .NET Core and .NET 5. " +
@@ -44,6 +52,7 @@ public class LegacyProjectAnalyzer : IAnalyzer
                 Source = nameof(LegacyProjectAnalyzer),
                 Code = AnalysisResultCode.Warning,
                 Parent = legacyProject,
+                Type = AnalysisResultType.Project,
                 Title = "Legacy project",
                 Message = "Project targets only legacy .NET versions (< .NET 5). Consider upgrading.",
                 Details = "All target frameworks for this project are legacy .NET Framework/Core versions (older than .NET 5). " +
@@ -59,6 +68,7 @@ public class LegacyProjectAnalyzer : IAnalyzer
                 Source = nameof(LegacyProjectAnalyzer),
                 Code = AnalysisResultCode.Ok,
                 Parent = project,
+                Type = AnalysisResultType.Project,
                 Title = "Modern SDK style",
                 Message = "Project targets a modern .NET version (>= .NET 5).",
                 Details = "The project uses a supported .NET version, which benefits from active development, " +

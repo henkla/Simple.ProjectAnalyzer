@@ -11,7 +11,15 @@ public class DuplicatePackageReferenceAnalyzer : IAnalyzer
                                  "This analyzer helps ensure that each package is referenced only once per project " +
                                  "to maintain clean and consistent dependency management.";
 
-    public IEnumerable<AnalysisResultCode> ResultCodes => [AnalysisResultCode.Warning, AnalysisResultCode.Ok];
+    public IEnumerable<AnalysisResultCode> Codes => [
+        AnalysisResultCode.Warning, 
+        AnalysisResultCode.Ok
+    ];
+    
+    public IEnumerable<AnalysisResultType> Targets => [
+        AnalysisResultType.Project, 
+        AnalysisResultType.PackageReference
+    ];
 
     public Task Run(Context context)
     {
@@ -30,6 +38,7 @@ public class DuplicatePackageReferenceAnalyzer : IAnalyzer
                 group.ToList().ForEach(reference => reference.AnalysisResults.Add(new AnalysisResult
                 {
                     Code = AnalysisResultCode.Warning,
+                    Type = AnalysisResultType.Project,
                     Title = "Duplicate package reference",
                     Message = $"Duplicate package reference {group.Key} with versions: {versions}",
                     Details = "The project file contains multiple references to the same NuGet package, " +
@@ -49,6 +58,7 @@ public class DuplicatePackageReferenceAnalyzer : IAnalyzer
                 project.AnalysisResults.Add(new AnalysisResult
                 {
                     Source = nameof(DuplicatePackageReferenceAnalyzer),
+                    Type = AnalysisResultType.Project,
                     Parent = project,
                     Code = AnalysisResultCode.Ok,
                     Title = "Duplicate package reference",
@@ -65,6 +75,7 @@ public class DuplicatePackageReferenceAnalyzer : IAnalyzer
                 {
                     Code = AnalysisResultCode.Warning,
                     Parent = project,
+                    Type = AnalysisResultType.Project,
                     Source = nameof(DuplicatePackageReferenceAnalyzer),
                     Title = "Duplicate package reference",
                     Message = "Duplicate package reference(s) found",
