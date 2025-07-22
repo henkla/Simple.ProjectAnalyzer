@@ -1,10 +1,10 @@
 using System.Text.Json;
-using Simple.ProjectAnalyzer.Domain.CommandLine;
+using Simple.ProjectAnalyzer.Abstractions.Output;
 using Simple.ProjectAnalyzer.Domain.Models;
 
 namespace Simple.ProjectAnalyzer.Domain.Services;
 
-public class DotnetService
+public class DotnetService(IConsoleOutput console)
 {
     private const string MetadataUrl = "https://dotnetcli.blob.core.windows.net/dotnet/release-metadata/releases-index.json";
     private const string LtsVersionFallback = "8.0"; // todo: är detta så snyggt egentligen?
@@ -14,11 +14,11 @@ public class DotnetService
 
     public async Task<TargetFramework> GetCurrentLtsVersion()
     {
-        Output.Verbose($"{nameof(DotnetService)}.{nameof(GetCurrentLtsVersion)} started");
-        Output.Verbose($"Metadata url: {MetadataUrl}");
-        Output.Verbose($"Cache directory name: {AppCacheDirectoryName}");
-        Output.Verbose($"Cache file name: {AppCacheFileName}");
-        Output.Verbose($"Cache duration: {AppCacheDurationInMinutes} minute(s)");
+        console.Verbose($"{nameof(DotnetService)}.{nameof(GetCurrentLtsVersion)} started");
+        console.Verbose($"Metadata url: {MetadataUrl}");
+        console.Verbose($"Cache directory name: {AppCacheDirectoryName}");
+        console.Verbose($"Cache file name: {AppCacheFileName}");
+        console.Verbose($"Cache duration: {AppCacheDurationInMinutes} minute(s)");
             
         var cacheDuration = TimeSpan.FromMinutes(AppCacheDurationInMinutes); 
         var cacheDirectory = Path.Combine(Path.GetTempPath(), AppCacheDirectoryName);
@@ -31,7 +31,7 @@ public class DotnetService
             : await GetMetadataAndStoreInCache(MetadataUrl, cacheDirectory, cacheFile);
 
         var ltsVersion = ExtractLtsVersionFromMetadata(releaseMetadata);
-        Output.Verbose($"Latest .NET LTS version: net{ltsVersion}");
+        console.Verbose($"Latest .NET LTS version: net{ltsVersion}");
         
         return new TargetFramework
         {
@@ -41,7 +41,7 @@ public class DotnetService
         };
     }
 
-    private static string ExtractLtsVersionFromMetadata(string json)
+    private string ExtractLtsVersionFromMetadata(string json)
     {
         using var jsonDocument = JsonDocument.Parse(json);
         var rootElement = jsonDocument.RootElement;
@@ -60,12 +60,12 @@ public class DotnetService
 
         if (ltsChannel.ValueKind == JsonValueKind.Undefined)
         {
-            Output.Warning($"No LTS version found in metadata - using fallback value: {LtsVersionFallback}");
+            console.Warning($"No LTS version found in metadata - using fallback value: {LtsVersionFallback}");
         }
 
         if (ltsChannel.GetProperty("channel-version").GetString() is null)
         {
-            Output.Warning($"No LTS version found in metadata - using fallback value: {LtsVersionFallback}");
+            console.Warning($"No LTS version found in metadata - using fallback value: {LtsVersionFallback}");
         }
 
         return ltsChannel.GetProperty("channel-version").GetString()!;
@@ -74,9 +74,9 @@ public class DotnetService
     private static bool MetadataExistIsCache(string cacheFile, TimeSpan cacheDuration) =>
         File.Exists(cacheFile) && DateTime.UtcNow - File.GetLastWriteTimeUtc(cacheFile) < cacheDuration;
 
-    private static async Task<string> GetMetadataAndStoreInCache(string metadataUrl, string cacheDirectory, string cacheFile)
+    private async Task<string> GetMetadataAndStoreInCache(string metadataUrl, string cacheDirectory, string cacheFile)
     {
-        Output.Verbose("Fetching metadata and saving in cache");
+        console.Verbose("Fetching metadata and saving in cache");
         
         using var http = new HttpClient();
         var json = await http.GetStringAsync(metadataUrl);

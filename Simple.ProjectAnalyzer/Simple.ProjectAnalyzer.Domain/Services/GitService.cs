@@ -1,16 +1,16 @@
 using LibGit2Sharp;
-using Simple.ProjectAnalyzer.Domain.CommandLine;
+using Simple.ProjectAnalyzer.Abstractions.Output;
 
 namespace Simple.ProjectAnalyzer.Domain.Services;
 
-public class GitService
+public class GitService(IConsoleOutput console)
 {
     private const string RepositoryRootDirectoryName = "Simple.ProjectAnalyzer.Repos";
     
     public string Clone(Uri path)
     {
-        Output.Verbose($"{nameof(GitService)}.{nameof(Clone)} started");
-        Output.Verbose($"Repository root directory name: {RepositoryRootDirectoryName}");
+        console.Verbose($"{nameof(GitService)}.{nameof(Clone)} started");
+        console.Verbose($"Repository root directory name: {RepositoryRootDirectoryName}");
         
         var repositoryName = Path.GetFileNameWithoutExtension(path.AbsolutePath);
         var repositoryRoot = Path.Combine(Path.GetTempPath(), RepositoryRootDirectoryName);
@@ -18,11 +18,11 @@ public class GitService
 
         if (!Directory.Exists(repositoryRoot))
         {
-            Output.Verbose($"Creating directory {repositoryRoot}");
+            console.Verbose($"Creating directory {repositoryRoot}");
             Directory.CreateDirectory(repositoryRoot);
         }
         
-        Output.Verbose($"Cloning repository {repositoryName} to {targetFolder} from  {path}");
+        console.Verbose($"Cloning repository {repositoryName} to {targetFolder} from  {path}");
         Repository.Clone(path.ToString(), targetFolder);
 
         return targetFolder;

@@ -6,6 +6,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Simple.ProjectAnalyzer.Doma
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Simple.ProjectAnalyzer.Example", "Simple.ProjectAnalyzer.Example\Simple.ProjectAnalyzer.Example.csproj", "{95E60DD7-EA30-4174-A194-A3B2EFB66344}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Simple.ProjectAnalyzer.Abstractions", "Simple.ProjectAnalyzer.Abstractions\Simple.ProjectAnalyzer.Abstractions.csproj", "{1929A9E5-C50F-42D8-A2F9-2BC74EBB0887}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -24,5 +26,9 @@ Global
 		{95E60DD7-EA30-4174-A194-A3B2EFB66344}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{95E60DD7-EA30-4174-A194-A3B2EFB66344}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{95E60DD7-EA30-4174-A194-A3B2EFB66344}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1929A9E5-C50F-42D8-A2F9-2BC74EBB0887}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1929A9E5-C50F-42D8-A2F9-2BC74EBB0887}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1929A9E5-C50F-42D8-A2F9-2BC74EBB0887}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1929A9E5-C50F-42D8-A2F9-2BC74EBB0887}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

@@ -2,20 +2,16 @@ using System.Reflection;
 using Microsoft.Extensions.DependencyInjection;
 using Simple.ProjectAnalyzer.Domain.Analysis;
 using Simple.ProjectAnalyzer.Domain.Analysis.Analyzers;
-using Simple.ProjectAnalyzer.Domain.CommandLine;
-using Simple.ProjectAnalyzer.Domain.CommandLine.Commands.Analyzers;
-using Simple.ProjectAnalyzer.Domain.CommandLine.Commands.Git;
-using Simple.ProjectAnalyzer.Domain.CommandLine.Commands.Local;
 using Simple.ProjectAnalyzer.Domain.Services;
 
 namespace Simple.ProjectAnalyzer.Domain.Extensions;
 
 public static class ServiceCollectionExtensions
 {
-    public static IServiceCollection RegisterDomainServices(this IServiceCollection services)
+    public static IServiceCollection AddDomainServices(this IServiceCollection services)
     {
         services.AddServices();
-        services.AddAnalyzersExperimental();
+        services.AddAnalyzers();
 
         return services;
     }
@@ -28,15 +24,11 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<ProjectParser>();
         services.AddSingleton<OutputHandler>();
         services.AddSingleton<GitService>();
-        services.AddSingleton<GitCommandHandler>();
-        services.AddSingleton<LocalCommandHandler>();
-        services.AddSingleton<AnalyzersCommandHandler>();
-        
 
         return services;
     }
     
-    private static IServiceCollection AddAnalyzersExperimental(this IServiceCollection services)
+    private static IServiceCollection AddAnalyzers(this IServiceCollection services)
     {
         var interfaceType = typeof(IAnalyzer);
         var typeImplementations = AppDomain.CurrentDomain
@@ -59,7 +51,7 @@ public static class ServiceCollectionExtensions
         {
             if (typeImplementation is null)
             {
-                Output.Error("An error occured during registration of analyzer");
+                Console.WriteLine("An error occured during registration of analyzer"); // todo: inte console.wl här
                 continue;
             }
             

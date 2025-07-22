@@ -1,9 +1,9 @@
 using System.Text.RegularExpressions;
-using Simple.ProjectAnalyzer.Domain.CommandLine;
+using Simple.ProjectAnalyzer.Abstractions.Output;
 
 namespace Simple.ProjectAnalyzer.Domain.Services;
 
-public partial class ProjectFinder
+public partial class ProjectFinder(IConsoleOutput console)
 {
     private static readonly string[] IgnoredDirectories = ["bin", "obj", ".git", ".vs", ".idea" ];
     private const string ProjectFileExtension = "*.csproj";
@@ -14,37 +14,37 @@ public partial class ProjectFinder
     
     public List<string> FindProjectFiles(string path)
     {
-        Output.Verbose($"{nameof(ProjectFinder)}.{nameof(FindProjectFiles)} started");
-        Output.Verbose($"Ignored directories: {string.Join(", ", IgnoredDirectories)}");
-        Output.Verbose($"Starting path: {path}");
+        console.Verbose($"{nameof(ProjectFinder)}.{nameof(FindProjectFiles)} started");
+        console.Verbose($"Ignored directories: {string.Join(", ", IgnoredDirectories)}");
+        console.Verbose($"Starting path: {path}");
 
         var projectFiles = GetProjectFilesInPathDirectory(path);
         if (projectFiles.Count != 0)
         {
-            Output.Verbose($"Found {projectFiles.Count} project file(s) in provided path directory");
+            console.Verbose($"Found {projectFiles.Count} project file(s) in provided path directory");
             return projectFiles;
         }
 
         projectFiles = GetProjectFilesBelowPathDirectory(path);
         if (projectFiles.Count != 0)
         {
-            Output.Verbose($"Found {projectFiles.Count} project file(s) recursively below provided path directory");
+            console.Verbose($"Found {projectFiles.Count} project file(s) recursively below provided path directory");
             return projectFiles;
         }
 
         projectFiles = GetProjectFilesAbovePathDirectory(path);
         if (projectFiles.Count != 0)
         {
-            Output.Verbose($"Found {projectFiles.Count} project file(s) above path directory");
+            console.Verbose($"Found {projectFiles.Count} project file(s) above path directory");
         }
 
         projectFiles = GetProjectFilesFromSolutionFileAbovePathDirectory(path);
         if (projectFiles.Count != 0)
         {
-            Output.Verbose($"Found {projectFiles.Count} project file(s) from solution file above path directory");
+            console.Verbose($"Found {projectFiles.Count} project file(s) from solution file above path directory");
         }
 
-        Output.Verbose("No project file(s) found");
+        console.Verbose("No project file(s) found");
         return [];
     }
 

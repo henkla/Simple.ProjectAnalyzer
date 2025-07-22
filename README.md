@@ -20,13 +20,13 @@
 
 ### Analysis
 
-Example: `git --path https://github.com/henkla/Simple.ProjectAnalyzer.git --verbose`
+Example: `--path https://github.com/henkla/Simple.ProjectAnalyzer.git --verbose`
 
 <img alt="image" src="state-of-now-1.png" />
 
 ### Available analyzers
 
-Example: `analyzers --list `
+Example: `list --analyzers`
 
 <img alt="image" src="state-of-now-2.png" />
 

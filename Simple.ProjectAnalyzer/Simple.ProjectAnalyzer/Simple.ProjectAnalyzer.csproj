@@ -8,6 +8,7 @@
     </PropertyGroup>
 
     <ItemGroup>
+      <ProjectReference Include="..\Simple.ProjectAnalyzer.Abstractions\Simple.ProjectAnalyzer.Abstractions.csproj" />
       <ProjectReference Include="..\Simple.ProjectAnalyzer.Domain\Simple.ProjectAnalyzer.Domain.csproj" />
     </ItemGroup>
     

@@ -1,38 +1,37 @@
 ﻿using System.Globalization;
 using Microsoft.Extensions.DependencyInjection;
-using Simple.ProjectAnalyzer;
-using Simple.ProjectAnalyzer.Domain.CommandLine.Commands.Analyzers;
-using Simple.ProjectAnalyzer.Domain.CommandLine.Commands.Git;
-using Simple.ProjectAnalyzer.Domain.CommandLine.Commands.Local;
+using Simple.ProjectAnalyzer.CommandLine.Commands.Analyze;
+using Simple.ProjectAnalyzer.CommandLine.Commands.List;
 using Simple.ProjectAnalyzer.Domain.Extensions;
-using Simple.ProjectAnalyzer.Domain.Utilities;
+using Simple.ProjectAnalyzer.Extensions;
+using Simple.ProjectAnalyzer.Utilities;
 using Spectre.Console.Cli;
 
-var services = new ServiceCollection().RegisterDomainServices();
+var services = new ServiceCollection()
+    .AddDomainServices()
+    .AddCommandHandlers()
+    .AddConsoleOutput();
+
 var typeRegistrar = new TypeRegistrar(services);
 var application = new CommandApp(typeRegistrar);
 
-application.SetDefaultCommand<LocalCommand>()
-    .WithDescription(Settings.ApplicationDescription);
+application.SetDefaultCommand<AnalyzeCommand>()
+    .WithDescription(ApplicationSettings.ApplicationDescription);
 
 application.Configure(config =>
 {
-    config.AddCommand<GitCommand>(GitCommand.Name)
-        .WithDescription(GitCommand.Description);
-
-    config.AddCommand<LocalCommand>(LocalCommand.Name)
-        .WithDescription(LocalCommand.Description);
+    config.AddCommand<ListCommand>(ListCommand.Name)
+        .WithDescription(ListCommand.Description);    
     
-    config.AddCommand<AnalyzersCommand>(AnalyzersCommand.Name)
-        .WithDescription(AnalyzersCommand.Description);
+    config.AddCommand<AnalyzeCommand>(AnalyzeCommand.Name)
+        .WithDescription(AnalyzeCommand.Description);
 
     config.TrimTrailingPeriods(true);
     config.UseAssemblyInformationalVersion();
     config.CaseSensitivity(CaseSensitivity.None);
-    config.AddExample(Settings.ApplicationExample);
-    config.SetApplicationName(Settings.ApplicationName);
-    config.SetApplicationCulture(new CultureInfo(Settings.ApplicationCulture));
-    config.SetExceptionHandler(ExceptionHandler.OnException);
+    config.AddExample(ApplicationSettings.ApplicationExample);
+    config.SetApplicationName(ApplicationSettings.ApplicationName);
+    config.SetApplicationCulture(new CultureInfo(ApplicationSettings.ApplicationCulture));
 });
 
 return application.Run(args);

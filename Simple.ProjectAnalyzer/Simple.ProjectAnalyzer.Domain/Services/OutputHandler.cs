@@ -1,16 +1,16 @@
+using Simple.ProjectAnalyzer.Abstractions.Output;
 using Simple.ProjectAnalyzer.Domain.Analysis;
 using Simple.ProjectAnalyzer.Domain.Analysis.Analyzers;
-using Simple.ProjectAnalyzer.Domain.CommandLine;
 using Simple.ProjectAnalyzer.Domain.Models;
 using Spectre.Console;
 
 namespace Simple.ProjectAnalyzer.Domain.Services;
 
-public class OutputHandler
+public class OutputHandler(IConsoleOutput console)
 {
     public void AnalysisResultToConsole(Context context)
     {
-        Output.Verbose($"{nameof(OutputHandler)}.{nameof(AnalysisResultToConsole)} started");
+        console.Verbose($"{nameof(OutputHandler)}.{nameof(AnalysisResultToConsole)} started");
 
         foreach (var project in context.Projects.OrderBy(p => p.Name))
         {
@@ -158,13 +158,13 @@ public class OutputHandler
         table.AddColumn("Result Codes");
         table.AddColumn("Description");
 
-        foreach (var analyzer in analyzers.OrderBy(a => a.Name))
+        foreach (var analyzer in analyzers.OrderBy(a => a.GetManifest().Name))
         {
             table.AddRow(
-                analyzer.Name,
-                string.Join(", ", analyzer.Targets), 
-                string.Join(", ", analyzer.Codes.Select(code => $"[{GetColorForResultCode(code)}]{code}[/]")),
-                analyzer.Description
+                analyzer.GetManifest().Name,
+                string.Join(", ", analyzer.GetManifest().Targets), 
+                string.Join(", ", analyzer.GetManifest().Codes.Select(code => $"[{GetColorForResultCode(code)}]{code}[/]")),
+                analyzer.GetManifest().Description
             );
         }
         
@@ -173,7 +173,7 @@ public class OutputHandler
         AnsiConsole.WriteLine();
         AnsiConsole.MarkupLine("You can execute one or more specific analyzers when using the [purple on black]local[/] or [purple on black]git[/] commands.");
         AnsiConsole.WriteLine("Example usage:");
-        AnsiConsole.MarkupLine("[purple on black]local --path /path/to/some/project-folder --analyzer <NAME> --analyzer <NAME> --analyzer <NAME>[/]");
+        AnsiConsole.MarkupLine("[purple on black]--path /path/to/some/project-folder --analyzer <NAME> --analyzer <NAME> --analyzer <NAME>[/]");
         AnsiConsole.WriteLine();
     }
 

@@ -1,11 +1,11 @@
 using System.Text.RegularExpressions;
 using System.Xml.Linq;
-using Simple.ProjectAnalyzer.Domain.CommandLine;
+using Simple.ProjectAnalyzer.Abstractions.Output;
 using Simple.ProjectAnalyzer.Domain.Models;
 
 namespace Simple.ProjectAnalyzer.Domain.Services
 {
-    public partial class ProjectParser
+    public partial class ProjectParser(IConsoleOutput console)
     {
         [GeneratedRegex(@"^\d{1,3}$")]
         private static partial Regex VersionPartRegex();
@@ -15,7 +15,7 @@ namespace Simple.ProjectAnalyzer.Domain.Services
 
         public Project ParseProjectFile(string projectFile)
         {
-            Output.Verbose($"{nameof(ProjectParser)}.{nameof(ParseProjectFile)} started: {projectFile}");
+            console.Verbose($"{nameof(ProjectParser)}.{nameof(ParseProjectFile)} started: {projectFile}");
 
             if (!File.Exists(projectFile))
             {
@@ -109,14 +109,14 @@ namespace Simple.ProjectAnalyzer.Domain.Services
                 }
                 else
                 {
-                    Output.Error("Unable to parse TargetFramework or platform identifiers");
+                    console.Error("Unable to parse TargetFramework or platform identifiers");
                 }
             }
 
             return targetFrameworks;
         }
 
-        private static List<Reference> ParseReferences(XDocument xDocument, XNamespace xNamespace)
+        private List<Reference> ParseReferences(XDocument xDocument, XNamespace xNamespace)
         {
             return xDocument
                 .Descendants(xNamespace + "Reference")
@@ -128,7 +128,7 @@ namespace Simple.ProjectAnalyzer.Domain.Services
 
                     if (bool.TryParse(privateValue, out var isPrivate))
                     {
-                        Output.Warning("Unable to parse private value for Reference");
+                        console.Warning("Unable to parse private value for Reference");
                     }
 
                     return new Reference
@@ -155,7 +155,7 @@ namespace Simple.ProjectAnalyzer.Domain.Services
             return xDocument.Root?.Attribute("Sdk")?.Value.Trim();
         }
 
-        private static List<PackageReference> ParsePackageReferences(XDocument xDocument, XNamespace xNamespace)
+        private List<PackageReference> ParsePackageReferences(XDocument xDocument, XNamespace xNamespace)
         {
             return xDocument
                 .Descendants(xNamespace + "PackageReference")
@@ -167,7 +167,7 @@ namespace Simple.ProjectAnalyzer.Domain.Services
 
                     if (versionAttribute is null && versionElement is null)
                     {
-                        Output.Warning("Unable to parse PackageReference version");
+                        console.Warning("Unable to parse PackageReference version");
                     }
 
                     return new PackageReference
@@ -209,7 +209,7 @@ namespace Simple.ProjectAnalyzer.Domain.Services
 
             if (frameworkType is null)
             {
-                Output.Error("Unable to parse TargetFramework type");
+                console.Error("Unable to parse TargetFramework type");
                 return "unknown";
             }
 
@@ -220,7 +220,7 @@ namespace Simple.ProjectAnalyzer.Domain.Services
         {
             if (string.IsNullOrEmpty(targetFramework))
             {
-                Output.Error("Unable to parse version from null or empty TargetFramework");
+                console.Error("Unable to parse version from null or empty TargetFramework");
                 return new Version(0, 0);
             }
 
@@ -246,7 +246,7 @@ namespace Simple.ProjectAnalyzer.Domain.Services
 
             if (versionParts is { Length: 0 } or null)
             {
-                Output.Error("Unable to parse version from TargetFramework");
+                console.Error("Unable to parse version from TargetFramework");
                 return new Version(0, 0);
             }
 
@@ -301,7 +301,7 @@ namespace Simple.ProjectAnalyzer.Domain.Services
                 }
             }
 
-            Output.Error("Unable to parse version from TargetFramework");
+            console.Error("Unable to parse version from TargetFramework");
             return new Version(0, 0);
         }
         
