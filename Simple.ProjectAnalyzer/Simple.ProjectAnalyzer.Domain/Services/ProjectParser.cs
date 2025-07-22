@@ -1,6 +1,6 @@
 using System.Text.RegularExpressions;
 using System.Xml.Linq;
-using Simple.ProjectAnalyzer.Abstractions.Output;
+using Simple.ProjectAnalyzer.Abstractions.CommandLine;
 using Simple.ProjectAnalyzer.Domain.Models;
 
 namespace Simple.ProjectAnalyzer.Domain.Services

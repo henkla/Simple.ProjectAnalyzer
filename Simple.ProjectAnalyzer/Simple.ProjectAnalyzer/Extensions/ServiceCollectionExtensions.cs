@@ -1,5 +1,5 @@
 using Microsoft.Extensions.DependencyInjection;
-using Simple.ProjectAnalyzer.Abstractions.Output;
+using Simple.ProjectAnalyzer.Abstractions.CommandLine;
 using Simple.ProjectAnalyzer.CommandLine;
 using Simple.ProjectAnalyzer.CommandLine.Commands.Analyze;
 using Simple.ProjectAnalyzer.CommandLine.Commands.List;

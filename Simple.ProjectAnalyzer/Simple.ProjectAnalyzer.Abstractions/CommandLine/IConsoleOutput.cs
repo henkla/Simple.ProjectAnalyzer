@@ -1,6 +1,6 @@
 using Spectre.Console;
 
-namespace Simple.ProjectAnalyzer.Abstractions.Output;
+namespace Simple.ProjectAnalyzer.Abstractions.CommandLine;
 
 public interface IConsoleOutput
 {

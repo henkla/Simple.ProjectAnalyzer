@@ -1,4 +1,4 @@
-using Simple.ProjectAnalyzer.Abstractions.Output;
+using Simple.ProjectAnalyzer.Abstractions.CommandLine;
 using Simple.ProjectAnalyzer.Domain;
 using Spectre.Console.Cli;
 

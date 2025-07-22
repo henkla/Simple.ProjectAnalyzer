@@ -1,5 +1,5 @@
 using System.Text.RegularExpressions;
-using Simple.ProjectAnalyzer.Abstractions.Output;
+using Simple.ProjectAnalyzer.Abstractions.CommandLine;
 
 namespace Simple.ProjectAnalyzer.Domain.Services;
 
